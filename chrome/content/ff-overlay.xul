@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet href="chrome://lookmarker/skin/overlay.css" type="text/css"?>
+<!DOCTYPE overlay SYSTEM "chrome://lookmarker/locale/overlay.dtd">
+<overlay id="lookmarker-overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="overlay.js"/>
+  <script src="ff-overlay.js"/>
+
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="lookmarker-strings" src="chrome://lookmarker/locale/overlay.properties"/>
+  </stringbundleset>
+  
+  <popup id="contentAreaContextMenu">
+    <menuitem id="context-lookmarker" label="&lookmarkerContext.label;"
+              accesskey="&lookmarkerContext.accesskey;"
+              insertafter="context-stop"
+              oncommand="lookmarker.onMenuItemCommand(event)"/>
+  </popup>
+
+  <toolbarpalette id="BrowserToolbarPalette">
+  <toolbarbutton id="lookmarker-toolbar-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+    label="&lookmarkerToolbarButton.label;" tooltiptext="&lookmarkerToolbarButton.tooltip;"
+    oncommand="lookmarker.onToolbarButtonCommand()"/>
+  </toolbarpalette>
+  
+  <!-- 
+   <menupopup id="button-popup">
+     <menuitem label="Bookmark Resource"/>
+     <menuitem label="Bookmark Sound Resource"/>
+     <menuitem label="Place bookmark in a topic map"/>
+   </menupopup>
+   ..
+   <hbox id="urlbar-icons">
+      <button id="at_urlbarBtn" type="menu" class="plain urlbar-icon at-logo-icon" insertbefore="feed-button" tooltiptext="&addthis.menu.sharethispage.label;" hidden="false">
+          <menupopup id="at_urlbarBtnPopup" onpopupshowing="AddThis_UrlBar.prepare()">
+              <menuitem id="at_urlbarBtnPopup_sharethispage" class="menuitem-iconic at-logo-icon" label="&addthis.menu.sharethispage.label;" share_label="&addthis.menu.sharethispage.label;" more_label="&addthis.menu.more.label;" tooltiptext="&addthis.menu.more.tooltip;"  />
+              <menuseparator />
+              <menuitem label="&addthis.menu.preferences.label;" tooltiptext="&addthis.menu.preferences.tooltip;" oncommand="AddThis.showPreferences(); event.stopPropagation();" />
+          </menupopup>
+      </button>
+  </hbox>
+   -->
+   
+  <toolbox id="navigator-toolbox">
+    <toolbar class="chromeclass-toolbar" toolbarname="&lookmarkerToolbar.name;" customizable="true" id="lookmarker-toolbar">
+      <!--<label value="View:"/>-->
+      <menubar id="topicmap-menubar">
+          <menu id="topicmap-menubar-menu" label="Open Topic Map" oncommand="lookmarker.onOpenTopicmap(event)">
+            <menupopup id="topicmap-menubar-popup">
+            </menupopup>
+          </menu>
+      </menubar>
+    </toolbar>
+  </toolbox>
+  
+</overlay>

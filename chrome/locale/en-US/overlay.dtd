@@ -1,0 +1,8 @@
+<!ENTITY lookmarker.label "to marker it up for later looking">
+<!ENTITY lookmarkerContext.label "Mark source in DeepaMehta">
+<!ENTITY lookmarkerContext.accesskey "D">
+<!ENTITY lookmarkerToolbarButton.label "Mark information resource in DeepaMehta">
+<!ENTITY lookmarkerToolbarButton.tooltip "Bookmark information resource with DeepaMehta (to look, see, imagine and show it)">
+<!ENTITY lookmarkerSidebar.label "DeepaMehta Detail Panel">
+<!ENTITY lookmarkerToolbar.name  "DeepaMehta3 Bar (Access Toolbar)">
+<!ENTITY lookmarkerToolbar.label "This is DeepaMehta">
