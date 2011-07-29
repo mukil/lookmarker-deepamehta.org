@@ -1,13 +1,16 @@
-// --
-// --- DeepaMehta3 Firefox XUL Client ---
-// --- @author Malte Reißig (malte@deepamehta.org) - http://github.com/mukil
-// --- @created 10122010
-// -- 
 
-var dm = "http://localhost:8182/de.deepamehta.3-client/index.html"
+// 
 var lookmarker = {
+  prefManager: undefined,
+  serviceHorstPost: undefined,
+  dmClient: undefined,
   onLoad: function() {
     // initialization code
+    // 
+    lookmarker.prefManager = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+    lookmarker.serviceHorstPost = lookmarker.prefManager.getCharPref("extensions.lookmarker.service.horstpost");
+    lookmarker.dmClient = lookmarker.serviceHorstPost + "/de.deepamehta.3-client/index.html";
+    // 
     this.initialized = true;
     this.strings = document.getElementById("lookmarker-strings");
     this.topicmap_menubar = document.getElementById("topicmap-menubar-popup");
@@ -26,8 +29,15 @@ var lookmarker = {
       }
     });
   },
+  
+  updatePreferences: function(e) { // updates js-client side used variables..
+    lookmarker.serviceHorstPost = lookmarker.prefManager.getCharPref("extensions.lookmarker.service.horstpost");
+    lookmarker.dmClient = lookmarker.serviceHorstPost + "/de.deepamehta.3-client/index.html";
+  },
 
   onMenuItemCommand: function(e) {
+    lookmarker.updatePreferences(); // get current service Url of the PreferenceMananger..
+    // 
     var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                   .getService(Components.interfaces.nsIPromptService);
     // createTopicResource(getCurrentURL(), title);
@@ -45,6 +55,7 @@ var lookmarker = {
   },
 
   onToolbarButtonCommand: function(e) {
+    lookmarker.updatePreferences(); // get current service Url of the PreferenceMananger..
     var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                   .getService(Components.interfaces.nsIPromptService);
     var title = getCurrentTitle();
@@ -55,14 +66,21 @@ var lookmarker = {
     // result is true if OK is pressed, false if Cancel. input.value holds the value of the edit field if "OK" was pressed
     if (result) {
         createSimpleTopicResource(currentUrl, input.value);
-        Components.utils.reportError("INFO: Deep Bookmarking saved: " + input.value + " ("+currentUrl+")");
+        Components.utils.reportError("INFO: Deep Bookmarking saved: " + input.value + " ("+currentUrl+") to " + lookmarker.serviceHorstPost);
     } else {
         Components.utils.reportError("INFO: Deep Bookmarking Aborted..");
     }
     
   },
   
+  onOpenPreferenceDialog: function(e) {
+    lookmarker.serviceHorstPost = lookmarker.prefManager.getCharPref("extensions.lookmarker.service.horstpost");
+    var dialogSettings = { service: lookmarker.serviceHorstPost };
+    window.openDialog("chrome://lookmarker/content/options.xul", "deepamehta-extension-preferences", "chrome,titlebar,toolbar,centerscreen,modal", this, dialogSettings);
+  },
+  
   onOpenTopicmap: function(e) {
+    lookmarker.updatePreferences(); // get current service Url of the PreferenceMananger..
     if (e != undefined) {
       var topicmapId = e.target.getAttribute("value");
       Components.utils.reportError("open map => " + topicmapId);
@@ -74,6 +92,17 @@ var lookmarker = {
 // ---
 // --- DeepaMehta3 JavaScript XUL Client
 // --
+
+/** 
+  * TODO: Adapt to the changed creation process in DM4 (as monitored with Firebug:)
+  * 1.) http://localhost:8080/core/topic - POST {"type_uri":"dm4.contacts.resource"}
+  * // http://localhost:8080/topicmap/1484/topic/1545/370/190 - PUT  {empty}
+  * // http://localhost:8080/core/association - PUT {"id":1528,"composite":{"dm4.topicmaps.x":205,"dm4.topicmaps.y":43}}
+  * // http://localhost:8080/core/association - PUT {"id":1550,"composite":{"dm4.topicmaps.x":770,"dm4.topicmaps.y":63}}
+  * 2.) http://localhost:8080/core/topic - PUT {"id":1545,"uri":"","type_uri":"dm4.contacts.resource","composite":{"dm4.contacts.resource_name":"Another Mth REsource","dm4.webbrowser.url":"http://mikromedia.de/mob"}}
+  *
+  * 
+  **/
 
 function createSimpleTopicResource(url, title) {
     var topic = '{ type_uri: "de/deepamehta/core/topictype/File", properties: { "de/deepamehta/core/property/FileName": "'+title+'", "de/deepamehta/core/property/Path": "'+url+'", "de/deepamehta/core/property/MediaType": "text/html" } }';
@@ -90,10 +119,11 @@ function createNotedTopicResource(url, title, note) {
 
 function getTopicsByType(type_uri, callback) {
     var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Components.interfaces.nsIXMLHttpRequest);
-    req.open("GET", "http://localhost:8182/core/topic/by_type/"+encodeURIComponent(type_uri, "UTF-8"));
+    var url = lookmarker.serviceHorstPost+"/core/topic/by_type/"+encodeURIComponent(type_uri, "UTF-8");
+    req.open("GET", url);
     req.setRequestHeader('Content-Type', 'application/json');
     req.overrideMimeType("application/json;text/plain");
-    Components.utils.reportError("INFO: http://localhost:8182/core/topic/by_type/"+encodeURIComponent(type_uri, "UTF-8"));
+    Components.utils.reportError("INFO: " + lookmarker.serviceHorstPost + "/core/topic/by_type/"+encodeURIComponent(type_uri, "UTF-8"));
     req.onreadystatechange = function (aEvt) {
       if (req.readyState == 4) {
          if(req.status != 200)
@@ -111,13 +141,14 @@ function getTopicsByType(type_uri, callback) {
 
 function sendTopicPost(body) {
     var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Components.interfaces.nsIXMLHttpRequest);
-    req.open("POST", "http://localhost:8182/core/topic");
+    var url = lookmarker.serviceHorstPost + "/core/topic";
+    req.open("POST", url);
     req.setRequestHeader('Content-Type', 'application/json');
     req.overrideMimeType("application/json;text/plain");
     req.onreadystatechange = function (aEvt) {
       if (req.readyState == 4) {
          if(req.status != 200)
-          Components.utils.reportError("TopicPOST failed: " + req.error);
+          Components.utils.reportError("TopicPOST failed: " + req.error + ":url:" + url);
          else
           Components.utils.reportError("TopicPOST SAVED: " + body);
       }
@@ -145,7 +176,8 @@ function getCurrentURL() {
 
 function navToTopicmap(id) {
     var currentWindow = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
-    currentWindow.window.content.location.href = dm+"?topicmap="+id;
+    var navToUrl = lookmarker.dmClient + "?topicmap=" + id;
+    currentWindow.window.content.location.href = navToUrl;
 }
 
 function getCurrentTitle() {

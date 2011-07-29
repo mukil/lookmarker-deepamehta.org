@@ -6,13 +6,18 @@
     <em:name>DeepaMehta3 Bookmarker (Lookmarker)</em:name>
     <em:version>1.0</em:version>
     <em:creator>Malte Reißig</em:creator>
-    <em:description>Introduce file resources to your personal DeepaMehta3 Server and turn any selected text into a "Note" with a source.</em:description>
+    <em:description>Introduce "Resources" to your personal deepaMehta server and turn any selected text into a "Note" associated with a "Resource".</em:description>
+    <em:optionsURL>chrome://lookmarker/content/options.xul</em:optionsURL>
+    <em:homepageURL>http://www.github.com/mukil</em:homepageURL>
+
     <em:targetApplication>
       <Description>
         <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id> <!-- Firefox -->
         <em:minVersion>3.6</em:minVersion>
-        <em:maxVersion>3.6.*</em:maxVersion>
+        <em:maxVersion>4.*</em:maxVersion>
       </Description>
     </em:targetApplication>
+
   </Description>
 </RDF>
+

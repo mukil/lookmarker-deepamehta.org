@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/global.css"?>
 
-<prefwindow id="modifyheadersPreferences" 
+<prefwindow id="deepamehta-extension-preferences" 
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     style="width: 42em; min-height: 37.5em;" onload="dialog.onload();">
     <script src="options.js"/>

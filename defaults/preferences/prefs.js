@@ -1,7 +1,5 @@
 // unused lookmarker example preferences
-pref("extensions.lookmarker.boolpref", false);
-pref("extensions.lookmarker.intpref", 0);
-pref("extensions.lookmarker.stringpref", "A string");
+pref("extensions.lookmarker.service.horstpost", "http://localhost:8080");
 
 /* debugging prefs */
 pref("browser.dom.window.dump.enabled", true);

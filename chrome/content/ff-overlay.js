@@ -9,3 +9,4 @@ lookmarker.showFirefoxContextMenu = function(event) {
 };
 
 window.addEventListener("load", lookmarker.onFirefoxLoad, false);
+
