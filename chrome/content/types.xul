@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<overlay id="deepamehta-preferences-types-overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+    <prefpane id="types-tab" label="Information Types">
+        <preferences/>
+        <groupbox id="modifyheaders-profiles">
+            <caption>Available Types of Information</caption>
+        </groupbox>
+    </prefpane>
+</overlay>

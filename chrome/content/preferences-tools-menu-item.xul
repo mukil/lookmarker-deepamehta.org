@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<!DOCTYPE overlay SYSTEM "chrome://lookmarker/locale/overlay.dtd">
+<overlay id="deepamehta-extensions-preferences-menuitem" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="overlay.js"/>
+  
+  <menupopup id="menu_ToolsPopup">
+    <menuitem id="bs-hello" label="&lookmarkerPreferenceButton.label;" tooltiptext="&lookmarkerPreferenceButton.tooltip;" oncommand="lookmarker.onOpenPreferenceDialog()"/>
+  </menupopup>
+
+</overlay>

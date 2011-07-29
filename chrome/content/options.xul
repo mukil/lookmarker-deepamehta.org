@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+
+<prefwindow id="modifyheadersPreferences" 
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    style="width: 42em; min-height: 37.5em;" onload="dialog.onload();">
+    <script src="options.js"/>
+
+    <prefpane id="services-tab" label="Services" image="chrome://lookmarker/skin/eyeconClear.png">
+      <preferences>
+        <preference id="extensions-lookmarker-service-horstpost" name="extensions.lookmarker.service.horstpost" type="string"/>
+      </preferences>
+
+      <vbox id="optionsBox">
+        <caption label="DeepaMehta Service Definition"/>
+        <label control="service-host" value="Your DeepaMehta Service URL"/>
+        <textbox id="service-host-box" preference="extensions-lookmarker-service-horstpost"/>
+      </vbox>
+    </prefpane>
+    <prefpane id="types-tab" label="Types" src="chrome://lookmarker/content/types.xul"/>
+
+</prefwindow>
+
