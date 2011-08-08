@@ -65,7 +65,6 @@ var lookmarker = {
     var result = promptService.prompt(null, "Bookmark Title", "Mark your resource with a title:", input, null, check);
     // result is true if OK is pressed, false if Cancel. input.value holds the value of the edit field if "OK" was pressed
     if (result) {
-        // createSimpleTopicResource(currentUrl, input.value);
         // 
         createTopicResource(currentUrl, input.value);
         Components.utils.reportError("INFO: send Info-Note: " + input.value + " ("+currentUrl+") to " + lookmarker.serviceHorstPost);
@@ -79,10 +78,6 @@ var lookmarker = {
     lookmarker.serviceHorstPost = lookmarker.prefManager.getCharPref("extensions.lookmarker.service.horstpost");
     var dialogSettings = { service: lookmarker.serviceHorstPost };
     window.openDialog("chrome://lookmarker/content/options.xul", "deepamehta-extension-preferences", "chrome,titlebar,toolbar,centerscreen,modal", this, dialogSettings);
-    // update after any return of the window..
-    // lookmarker.serviceHorstPost = dialogSettings.service;
-    // alert("returning dialogSettings.serviceURL =>  " + lookmarker.serviceHorstPost);
-    // lookmarker.updatePreferences();
   },
   
   onOpenTopicmap: function(e) {
@@ -96,17 +91,10 @@ var lookmarker = {
 };
 
 // ---
-// --- DeepaMehta3 JavaScript XUL Client
+// --- DeepaMehta4 JavaScript XUL Client
 // --
 
 /** 
-  * TODO: Adapt to the changed creation process in DM4 (as monitored with Firebug:)
-  * 1.) http://localhost:8080/core/topic - POST {"type_uri":"dm4.contacts.resource"}
-  * // http://localhost:8080/topicmap/1484/topic/1545/370/190 - PUT  {empty}
-  * // http://localhost:8080/core/association - PUT {"id":1528,"composite":{"dm4.topicmaps.x":205,"dm4.topicmaps.y":43}}
-  * // http://localhost:8080/core/association - PUT {"id":1550,"composite":{"dm4.topicmaps.x":770,"dm4.topicmaps.y":63}}
-  * 2.) http://localhost:8080/core/topic - PUT {"id":1545,"uri":"","type_uri":"dm4.contacts.resource","composite":{"dm4.contacts.resource_name":"Another Mth REsource","dm4.webbrowser.url":"http://mikromedia.de/mob"}}
-  *
   * 
   **/
 
@@ -136,10 +124,6 @@ function createRelatedTopicNote(url, title, body) {
   // send resource (first) topic 
   // ### TODO: look up if URL of webtopic is already known
   sendTopicPost(webtopic, createRelatedTopicHandler);
-  // 
-  // sendTopicPost(notetopic);
-  // ### TODO: Associate these two..
-  // sendTopicPost(webtopic);
 }
 
 
@@ -172,7 +156,6 @@ function associateResultHandler(resultData) {
   topicOrigin = JSON.parse(resultData);
   // 
   if ( topicToRelate.id != undefined && topicOrigin.id != undefined ) {
-    // 
     // createAssociation.. between 
     Components.utils.reportError("associateResultHandler " + topicOrigin.id + " ==> " + topicToRelate.id);
     var association = '{"type_uri":"dm4.core.association","role_1":{"topic_id":'+topicOrigin.id+',"role_type_uri":"dm4.core.default"},"role_2":{"topic_id":'+topicToRelate.id+',"role_type_uri":"dm4.core.default"}}';
@@ -180,14 +163,6 @@ function associateResultHandler(resultData) {
     // topicToRelate.id && relatedTopicId..
   }
 }
-
-
-/* function createSimpleTopicResource(url, title) {
-    var topic = '{ type_uri: "de/deepamehta/core/topictype/File", properties: { "de/deepamehta/core/property/FileName": "'+title+'", "de/deepamehta/core/property/Path": "'+url+'", "de/deepamehta/core/property/MediaType": "text/html" } }';
-    sendTopicPost(topic);
-} */
-
-// POST /core/association/ -{"type_uri":"dm4.core.association","role_1":{"topic_id":2048,"role_type_uri":"dm4.core.default"},"role_2":{"topic_id":2295,"role_type_uri":"dm4.core.default"}}
 
 function getTopicsByType(type_uri, callback) {
     var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Components.interfaces.nsIXMLHttpRequest);
