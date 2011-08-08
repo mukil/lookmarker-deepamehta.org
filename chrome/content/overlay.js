@@ -9,13 +9,13 @@ var lookmarker = {
     // 
     lookmarker.prefManager = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
     lookmarker.serviceHorstPost = lookmarker.prefManager.getCharPref("extensions.lookmarker.service.horstpost");
-    lookmarker.dmClient = lookmarker.serviceHorstPost + "/de.deepamehta.3-client/index.html";
+    lookmarker.dmClient = lookmarker.serviceHorstPost + "/de.deepamehta.webclient/index.html";
     // 
     this.initialized = true;
     this.strings = document.getElementById("lookmarker-strings");
     this.topicmap_menubar = document.getElementById("topicmap-menubar-popup");
     // this.topicmap_menulist = document.getElementById("topicmap-menulist-popup");
-    getTopicsByType("de/deepamehta/core/topictype/Topicmap", function responseArrived(result){
+    getTopicsByType("dm4.topicmaps.topicmap", function responseArrived(result){
       var topicmaps = JSON.parse(result);
       for (var i = 0; i < topicmaps.length; i++) {
         var topicmap = topicmaps[i];
@@ -32,7 +32,7 @@ var lookmarker = {
   
   updatePreferences: function(e) { // updates js-client side used variables..
     lookmarker.serviceHorstPost = lookmarker.prefManager.getCharPref("extensions.lookmarker.service.horstpost");
-    lookmarker.dmClient = lookmarker.serviceHorstPost + "/de.deepamehta.3-client/index.html";
+    lookmarker.dmClient = lookmarker.serviceHorstPost + "/de.deepamehta.3.webclient/index.html";
   },
 
   onMenuItemCommand: function(e) {
@@ -49,8 +49,8 @@ var lookmarker = {
       // just bookmark the page
       lookmarker.onToolbarButtonCommand(e);
     } else {
-      // also take a note
-      createNotedTopicResource(currentUrl, title, selectedText);
+      // bookmark the resource, take a note and relate both with each other..
+      createRelatedTopicNote(currentUrl, title, selectedText);
     }
   },
 
@@ -65,10 +65,12 @@ var lookmarker = {
     var result = promptService.prompt(null, "Bookmark Title", "Mark your resource with a title:", input, null, check);
     // result is true if OK is pressed, false if Cancel. input.value holds the value of the edit field if "OK" was pressed
     if (result) {
-        createSimpleTopicResource(currentUrl, input.value);
-        Components.utils.reportError("INFO: Deep Bookmarking saved: " + input.value + " ("+currentUrl+") to " + lookmarker.serviceHorstPost);
+        // createSimpleTopicResource(currentUrl, input.value);
+        // 
+        createTopicResource(currentUrl, input.value);
+        Components.utils.reportError("INFO: send Info-Note: " + input.value + " ("+currentUrl+") to " + lookmarker.serviceHorstPost);
     } else {
-        Components.utils.reportError("INFO: Deep Bookmarking Aborted..");
+        Components.utils.reportError("INFO: sending Info-Note aborted...");
     }
     
   },
@@ -77,6 +79,10 @@ var lookmarker = {
     lookmarker.serviceHorstPost = lookmarker.prefManager.getCharPref("extensions.lookmarker.service.horstpost");
     var dialogSettings = { service: lookmarker.serviceHorstPost };
     window.openDialog("chrome://lookmarker/content/options.xul", "deepamehta-extension-preferences", "chrome,titlebar,toolbar,centerscreen,modal", this, dialogSettings);
+    // update after any return of the window..
+    // lookmarker.serviceHorstPost = dialogSettings.service;
+    // alert("returning dialogSettings.serviceURL =>  " + lookmarker.serviceHorstPost);
+    // lookmarker.updatePreferences();
   },
   
   onOpenTopicmap: function(e) {
@@ -104,18 +110,84 @@ var lookmarker = {
   * 
   **/
 
-function createSimpleTopicResource(url, title) {
-    var topic = '{ type_uri: "de/deepamehta/core/topictype/File", properties: { "de/deepamehta/core/property/FileName": "'+title+'", "de/deepamehta/core/property/Path": "'+url+'", "de/deepamehta/core/property/MediaType": "text/html" } }';
-    sendTopicPost(topic);
+function createTopicResource(url, title) {
+  //
+  var webtopic = '{"uri":"","type_uri":"dm4.contacts.resource","composite":{"dm4.contacts.resource_name":"'+title+'","dm4.webbrowser.url":"'+url+'"}}';
+  sendTopicPost(webtopic, getResultingTopicId);
 }
 
-function createNotedTopicResource(url, title, note) {
-    var topic = '{ type_uri: "de/deepamehta/core/topictype/File", properties: { "de/deepamehta/core/property/FileName": "'+title+'", "de/deepamehta/core/property/Path": "'+url+'", "de/deepamehta/core/property/MediaType": "text/html" } }';
-    var note = '{ type_uri: "de/deepamehta/core/topictype/Note", properties: { "de/deepamehta/core/property/Title": "'+title+'", "de/deepamehta/core/property/Text": "<i>&raquo;'+note+'&laquo;<i>"} }';
-    sendTopicPost(topic);
-    // TODO: relate these two topics
-    sendTopicPost(note);
+function getResultingTopicId(resultData) {
+  var topicId = JSON.parse(resultData).id;
+  Components.utils.reportError("TopicResult is available: " + topicId + " but not of interest anymore.. dropping knowledge");
 }
+
+/** create a resource and relate the note to it */
+var topicToRelate = undefined; // used in the following three methods..
+var topicOrigin = undefined; // ^^
+// 
+function createRelatedTopicNote(url, title, body) {
+  // {"id":2541,"uri":"","type_uri":"dm4.notes.note","composite":{"dm4.notes.title":"Test Yea","dm4.notes.text":"<p>asdasd</p>"}}
+  var selectedText = cleanUpForJson(body);
+  var notetopic = '{"uri":"","type_uri":"dm4.notes.note","composite":{"dm4.notes.title":"'+title+'","dm4.notes.text":"'+body+'"}}';
+  var webtopic = '{"uri":"","type_uri":"dm4.contacts.resource","composite":{"dm4.contacts.resource_name":"'+title+'","dm4.webbrowser.url":"'+url+'"}}';
+  // 
+  // mark down other topic to be able to create it after the result arrived for the first topic..
+  topicOrigin = notetopic;
+  // send resource (first) topic 
+  // ### TODO: look up if URL of webtopic is already known
+  sendTopicPost(webtopic, createRelatedTopicHandler);
+  // 
+  // sendTopicPost(notetopic);
+  // ### TODO: Associate these two..
+  // sendTopicPost(webtopic);
+}
+
+
+// --
+// --- Utilities
+// --
+
+function cleanUpForJson(somehtml) {
+  var result = "";
+  result = somehtml.toString().replace('/"/g", "\\\"');
+  result = somehtml.toString().replace('/{/g", "\\\{');
+  result = somehtml.toString().replace('/}/g", "\\\}');
+  return result;
+}
+
+/** create the note topic after the talked about resource topic.. */
+function createRelatedTopicHandler(resultData) {
+  topicToRelate = JSON.parse(resultData); // mark down the resource topic (now with ID) for later usage..
+  // 
+  if (topicOrigin != undefined) {
+    // create the somehow to be related topic
+    sendTopicPost(topicOrigin, associateResultHandler);
+  } else {
+    Components.utils.reportError("*** createRelatedTopicHandler has no topic ("+topicOrigin+") to relate to origin (" + topicToRelate.id + ")");
+  }
+}
+
+function associateResultHandler(resultData) {
+  // topicId of the related topic
+  topicOrigin = JSON.parse(resultData);
+  // 
+  if ( topicToRelate.id != undefined && topicOrigin.id != undefined ) {
+    // 
+    // createAssociation.. between 
+    Components.utils.reportError("associateResultHandler " + topicOrigin.id + " ==> " + topicToRelate.id);
+    var association = '{"type_uri":"dm4.core.association","role_1":{"topic_id":'+topicOrigin.id+',"role_type_uri":"dm4.core.default"},"role_2":{"topic_id":'+topicToRelate.id+',"role_type_uri":"dm4.core.default"}}';
+    sendAssocPost(association);
+    // topicToRelate.id && relatedTopicId..
+  }
+}
+
+
+/* function createSimpleTopicResource(url, title) {
+    var topic = '{ type_uri: "de/deepamehta/core/topictype/File", properties: { "de/deepamehta/core/property/FileName": "'+title+'", "de/deepamehta/core/property/Path": "'+url+'", "de/deepamehta/core/property/MediaType": "text/html" } }';
+    sendTopicPost(topic);
+} */
+
+// POST /core/association/ -{"type_uri":"dm4.core.association","role_1":{"topic_id":2048,"role_type_uri":"dm4.core.default"},"role_2":{"topic_id":2295,"role_type_uri":"dm4.core.default"}}
 
 function getTopicsByType(type_uri, callback) {
     var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Components.interfaces.nsIXMLHttpRequest);
@@ -135,22 +207,37 @@ function getTopicsByType(type_uri, callback) {
     req.send(null);
 }
 
-// --
-// --- Utilities
-// --
-
-function sendTopicPost(body) {
+function sendAssocPost(body, resultHandler) {
     var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Components.interfaces.nsIXMLHttpRequest);
-    var url = lookmarker.serviceHorstPost + "/core/topic";
+    var url = lookmarker.serviceHorstPost + "/core/association";
+    Components.utils.reportError("sendAssocPOST => \"" + body + "\"");
     req.open("POST", url);
     req.setRequestHeader('Content-Type', 'application/json');
     req.overrideMimeType("application/json;text/plain");
     req.onreadystatechange = function (aEvt) {
       if (req.readyState == 4) {
-         if(req.status != 200)
+         if (req.status != 200)
+          Components.utils.reportError("AssocPOST failed: " + req.error + ":url:" + url);
+         else
+          resultHandler(req.responseText);
+      }
+    };
+    req.send(body);
+}
+
+function sendTopicPost(body, resultHandler) {
+    var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Components.interfaces.nsIXMLHttpRequest);
+    var url = lookmarker.serviceHorstPost + "/core/topic";
+    Components.utils.reportError("sendTopicPOST => \"" + body + "\"");
+    req.open("POST", url);
+    req.setRequestHeader('Content-Type', 'application/json');
+    req.overrideMimeType("application/json;text/plain");
+    req.onreadystatechange = function (aEvt) {
+      if (req.readyState == 4) {
+         if (req.status != 200)
           Components.utils.reportError("TopicPOST failed: " + req.error + ":url:" + url);
          else
-          Components.utils.reportError("TopicPOST SAVED: " + body);
+          resultHandler(req.responseText);
       }
     };
     req.send(body);
