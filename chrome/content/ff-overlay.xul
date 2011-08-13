@@ -42,11 +42,17 @@
    -->
    
   <toolbox id="navigator-toolbox">
-    <toolbar class="chromeclass-toolbar" toolbarname="&lookmarkerToolbar.name;" customizable="true" id="lookmarker-toolbar">
+    <toolbar class="chromeclass-toolbar" toolbarname="&lookmarkerToolbar.name;" customizable="false" id="lookmarker-toolbar" mode="full" autohide="true">
       <!--<label value="View:"/>-->
       <menubar id="topicmap-menubar">
-          <menu id="topicmap-menubar-menu" label="Open Topic Map" oncommand="lookmarker.onOpenTopicmap(event)">
+          <menu id="topicmap-menubar-menu" label="Topic Maps" oncommand="lookmarker.onOpenTopicmap(event)">
             <menupopup id="topicmap-menubar-popup">
+            </menupopup>
+          </menu>
+      </menubar>
+      <menubar id="bookmark-menubar">
+          <menu id="bookmark-menubar-menu" label="Web Resources" oncommand="lookmarker.onOpenBookmark(event)">
+            <menupopup id="bookmark-menubar-popup">
             </menupopup>
           </menu>
       </menubar>

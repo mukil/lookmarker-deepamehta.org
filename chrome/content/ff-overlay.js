@@ -9,4 +9,5 @@ lookmarker.showFirefoxContextMenu = function(event) {
 };
 
 window.addEventListener("load", lookmarker.onFirefoxLoad, false);
-
+// window.openDialog("chrome://lookmarkers/content/options.xul", "modifyheadersDialog", "resizable,dialog,centerscreen,modal", this);
+// window.openDialog("chrome://lookmarkers/content/options.xul", "modifyheadersPreferences", "chrome,titlebar,toolbar,centerscreen,modal", this);

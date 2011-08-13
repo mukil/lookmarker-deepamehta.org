@@ -1,10 +1,10 @@
-<!ENTITY lookmarker.label "to marker it up for later looking">
-<!ENTITY lookmarkerContext.label "Note down your selection in DeepaMehta">
-<!ENTITY lookmarkerContext.accesskey "D">
+<!ENTITY lookmarker.label "Take a note and relax.">
+<!ENTITY lookmarkerContext.label "Notice">
+<!ENTITY lookmarkerContext.accesskey "N">
 <!ENTITY lookmarkerToolbarButton.label "Notice">
-<!ENTITY lookmarkerToolbarButton.tooltip "Bookmark information resources with DeepaMehta">
-<!ENTITY lookmarkerPreferenceButton.label "DeepaMehta Extension Preferences">
+<!ENTITY lookmarkerToolbarButton.tooltip "Notice">
+<!ENTITY lookmarkerPreferenceButton.label "DeepaMehta Extension Settings">
 <!ENTITY lookmarkerPreferenceButton.tooltip "Configure DeepaMehta Firefox Extension">
 <!ENTITY lookmarkerSidebar.label "DeepaMehta Detail Panel">
 <!ENTITY lookmarkerToolbar.name  "DeepaMehta Toolbar">
-<!ENTITY lookmarkerToolbar.label "This is DeepaMehta">
+<!ENTITY lookmarkerToolbar.label "/run dmc">

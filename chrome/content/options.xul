@@ -9,12 +9,16 @@
     <prefpane id="services-tab" label="Services" image="chrome://lookmarker/skin/eyeconClear.png">
       <preferences>
         <preference id="extensions-lookmarker-service-horstpost" name="extensions.lookmarker.service.horstpost" type="string"/>
+        <preference id="extensions-lookmarker-notedown-html" name="extensions.lookmarker.notedown.html" type="bool"/>
       </preferences>
 
       <vbox id="optionsBox">
         <caption label="DeepaMehta Service Definition"/>
         <label control="service-host" value="Your DeepaMehta Service URL"/>
         <textbox id="service-host-box" preference="extensions-lookmarker-service-horstpost"/>
+        <caption label=""/>
+        <caption label="DeepaMehta Note Settings"/>
+        <checkbox id="notedown-html" preference="extensions-lookmarker-notedown-html" label="Mark down text selections in HTML"/>
       </vbox>
     </prefpane>
     <prefpane id="types-tab" label="Types" src="chrome://lookmarker/content/types.xul"/>
