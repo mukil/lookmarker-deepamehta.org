@@ -21,7 +21,7 @@
         <checkbox id="notedown-html" preference="extensions-lookmarker-notedown-html" label="Mark down text selections in HTML"/>
       </vbox>
     </prefpane>
-    <prefpane id="types-tab" label="Types" src="chrome://lookmarker/content/types.xul"/>
+    <!-- <prefpane id="types-tab" label="Types" src="chrome://lookmarker/content/types.xul"/> -->
 
 </prefwindow>
 

@@ -1,6 +1,7 @@
 
 /**
  * todo's: match url's, new notification dialog
+ * fixme's: prepare values (e.g. resource titles, ) be aware of ":" and """ for properly for being a valid json entity
 **/
 var lookmarker = {
   prefManager: undefined,
@@ -14,7 +15,7 @@ var lookmarker = {
     lookmarker.prefManager = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
     lookmarker.serviceHorstPost = lookmarker.prefManager.getCharPref("extensions.lookmarker.service.horstpost");
     lookmarker.noteAsHTML = lookmarker.prefManager.getBoolPref("extensions.lookmarker.notedown.html");
-    lookmarker.dmClient = lookmarker.serviceHorstPost + "/de.deepamehta.webclient/index.html";
+    lookmarker.dmClient = lookmarker.serviceHorstPost + "/index.html";
     // 
     this.strings = document.getElementById("lookmarker-strings");
     this.topicmap_menubar = document.getElementById("topicmap-menubar-popup");
@@ -25,6 +26,14 @@ var lookmarker = {
       getTopicsByType("dm4.contacts.resource", function responseArrived(result) {
         var bookmarks = JSON.parse(result);
         Components.utils.reportError("INFO: loaded " + bookmarks.length + " bookmarks");
+        if (bookmark_menubar.childNodes.length > 0) {
+          // see the following iterative, interesting code snippet (https://developer.mozilla.org/en/DOM/Node.childNodes)
+          while (bookmark_menubar.firstChild) {
+            //The list is LIVE so it will re-index each call
+            bookmark_menubar.removeChild(bookmark_menubar.firstChild);
+          }
+          Components.utils.reportError("INFO: bookmarks reloaded, so we just cleaned up the bookmark-menubar");
+        }
         for (var i = 0; i < bookmarks.length; i++) {
           //
           var bookmark = bookmarks[i];
@@ -43,6 +52,14 @@ var lookmarker = {
       getTopicsByType("dm4.topicmaps.topicmap", function responseArrived(result) {
         var topicmaps = JSON.parse(result);
         Components.utils.reportError("INFO: loaded " + topicmaps.length + " maps");
+        if (topicmap_menubar.childNodes.length > 0) {
+          // see the following iterative, interesting code snippet (https://developer.mozilla.org/en/DOM/Node.childNodes)
+          while (topicmap_menubar.firstChild) {
+            //The list is LIVE so it will re-index each call
+            topicmap_menubar.removeChild(topicmap_menubar.firstChild);
+          }
+          Components.utils.reportError("INFO: topicmaps reloaded, so we just cleaned up the topicmap-menubar");
+        }
         for (var i = 0; i < topicmaps.length; i++) {
           var topicmap = topicmaps[i];
           var someitem = document.createElement("menuitem");
@@ -60,7 +77,7 @@ var lookmarker = {
   
   updatePreferences: function(e) { // updates js-client side used variables..
     lookmarker.serviceHorstPost = lookmarker.prefManager.getCharPref("extensions.lookmarker.service.horstpost");
-    lookmarker.dmClient = lookmarker.serviceHorstPost + "/de.deepamehta.webclient/index.html";
+    lookmarker.dmClient = lookmarker.serviceHorstPost + "/index.html";
     lookmarker.noteAsHTML = lookmarker.prefManager.getBoolPref("extensions.lookmarker.notedown.html");
   },
 
@@ -156,12 +173,24 @@ var lookmarker = {
 function createTopicResource(url, title) {
   //
   var webtopic = '{"uri":"","type_uri":"dm4.contacts.resource","composite":{"dm4.contacts.resource_name":"'+title+'","dm4.webbrowser.url":"'+url+'"}}';
-  sendTopicPost(webtopic);
+  getTopicByValueAndType('dm4.webbrowser.url', url, function(responseText) {
+    //
+    if (responseText != undefined) {
+      // ### Notify user and load existing Bookmark, may wants to change title/name of URL 
+      Components.utils.reportError("URL KNOWN...doing nothing by now => " + responseText);
+    } else {
+      sendTopicPost(webtopic, getResultingTopicId);
+    }
+  });
+  
+  // sendTopicPost(webtopic, getResultingTopicId);
 }
 
 function getResultingTopicId(resultData) {
   var topicId = JSON.parse(resultData).id;
-  Components.utils.reportError("TopicResult is available: " + topicId + " but not of interest anymore.. dropping knowledge");
+  // Components.utils.reportError("TopicResult is available: " + topicId + " but not of interest anymore..);
+  lookmarker.initialized = false;
+  lookmarker.onLoad(); // reload all bookmarks.
 }
 
 /** create a resource and relate the note to it */
@@ -177,12 +206,16 @@ function createRelatedTopicNote(url, notetitle, body) {
   // mark down other topic to be able to create it after the result arrived for the first topic..
   topicOrigin = notetopic;
   // send resource (first) topic 
-  // ### TODO: look up if URL of webtopic is already known
-  // getTopicByValueAndType('dm4.webbrowser.url', url, function(responseText) {
+  getTopicByValueAndType('dm4.webbrowser.url', url, function(responseText) {
     //
-    // Components.utils.reportError("URL MATCH : " + responseText);
-    sendTopicPost(webtopic, createRelatedTopicHandler);
-  //});
+    if (responseText != undefined) {
+      Components.utils.reportError("URL-Topic Match!... " + responseText);
+      // ### TODO reuse WEBPAGE-Topic instead of URL-Topic
+      sendTopicPost(responseText, createRelatedTopicHandler);
+    } else {
+      sendTopicPost(webtopic, createRelatedTopicHandler);
+    }
+  });
 }
 
 
@@ -296,17 +329,19 @@ function getTopicsByType(type_uri, callback) {
 function getTopicByValueAndType(type_uri, value, callback) {
     var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Components.interfaces.nsIXMLHttpRequest);
     Components.utils.reportError("DEBUG: url is " + value + " and " + encodeURIComponent(value, "UTF-8"));
-    var url = lookmarker.serviceHorstPost+"/core/topic/" + type_uri + "/value/" + encodeURIComponent(value, "UTF-8");
+    var url = lookmarker.serviceHorstPost+"/core/topic/by_value/" + type_uri + "/" + encodeURIComponent(value, "UTF-8");
     req.open("GET", url);
     req.setRequestHeader('Content-Type', 'application/json');
     req.overrideMimeType("application/json;text/plain");
     Components.utils.reportError("INFO: " + lookmarker.serviceHorstPost + "/core/topic/"+type_uri+"/value/"+encodeURIComponent(value, "UTF-8"));
     req.onreadystatechange = function (aEvt) {
       if (req.readyState == 4) {
-         if(req.status != 200)
-          Components.utils.reportError("GET TopicsByType failed: " + req.status);
-         else
+        if(req.status != 200) {
+          Components.utils.reportError("GET TopicsByTypeAndValue NULL: " + req.status);
+          callback(undefined);
+        } else {
           callback(req.responseText);
+        }
       }
     };
     req.send(null);

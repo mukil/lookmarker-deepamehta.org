@@ -1,23 +1,19 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#">
-  <Description about="urn:mozilla:install-manifest">
-    <em:id>lookmarker@deepamehta.org</em:id>
-    <em:type>2</em:type>
-    <em:name>DeepaMehta3 Bookmarker (Lookmarker)</em:name>
-    <em:version>1.0</em:version>
-    <em:creator>Malte Reißig</em:creator>
-    <em:description>Introduce "Resources" to your personal deepaMehta server and turn any selected text into a "Note" associated with a "Resource".</em:description>
-    <em:optionsURL>chrome://lookmarker/content/options.xul</em:optionsURL>
-    <em:homepageURL>http://www.github.com/mukil</em:homepageURL>
-
-    <em:targetApplication>
-      <Description>
-        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id> <!-- Firefox -->
-        <em:minVersion>3.6</em:minVersion>
-        <em:maxVersion>4.*</em:maxVersion>
-      </Description>
-    </em:targetApplication>
-
-  </Description>
-</RDF>
-
+<?xml version="1.0"?>
+<RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
+         xmlns:NC="http://home.netscape.com/NC-rdf#"
+         xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <RDF:Description RDF:about="rdf:#$kz5hd"
+                   em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
+                   em:minVersion="3.6"
+                   em:maxVersion="6.0.*" />
+  <RDF:Description RDF:about="urn:mozilla:install-manifest"
+                   em:id="lookmarker@deepamehta.org"
+                   em:name="DeepaMehta4 Bookmarker (Lookmarker)"
+                   em:version="1.0"
+                   em:creator="Malte Reißig"
+                   em:description="Introduce &quot;Resources&quot; to your personal deepaMehta server and turn any selected text into a &quot;Note&quot; associated with a &quot;Resource&quot;."
+                   em:homepageURL="http://github.com/mukil/lookmarker-deepamehta.org"
+                   em:optionsURL="chrome://lookmarker/content/options.xul">
+    <em:targetApplication RDF:resource="rdf:#$kz5hd"/>
+  </RDF:Description>
+</RDF:RDF>
