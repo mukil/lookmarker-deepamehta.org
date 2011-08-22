@@ -23,7 +23,7 @@ var lookmarker = {
     // this.topicmap_menulist = document.getElementById("topicmap-menulist-popup");
     if ( !lookmarker.initialized ) {
       // bookmarks
-      getTopicsByType("dm4.contacts.resource", function responseArrived(result) {
+      getTopicsByType("dm4.webbrowser.web_resource", function responseArrived(result) {
         var bookmarks = JSON.parse(result);
         Components.utils.reportError("INFO: loaded " + bookmarks.length + " bookmarks");
         if (bookmark_menubar.childNodes.length > 0) {
@@ -172,25 +172,23 @@ var lookmarker = {
 
 function createTopicResource(url, title) {
   //
-  var webtopic = '{"uri":"","type_uri":"dm4.contacts.resource","composite":{"dm4.contacts.resource_name":"'+title+'","dm4.webbrowser.url":"'+url+'"}}';
+  var webpageTitle = cleanUpForJson(title);
+  var webtopic = '{"uri":"","type_uri":"dm4.webbrowser.web_resource","composite":{"dm4.webbrowser.web_resource_description":"'+webpageTitle+'","dm4.webbrowser.url":"'+url+'"}}';
   getTopicByValueAndType('dm4.webbrowser.url', url, function(responseText) {
     //
     if (responseText != undefined) {
       // ### Notify user and load existing Bookmark, may wants to change title/name of URL 
-      Components.utils.reportError("URL KNOWN...doing nothing by now => " + responseText);
     } else {
       sendTopicPost(webtopic, getResultingTopicId);
     }
   });
-  
   // sendTopicPost(webtopic, getResultingTopicId);
 }
 
 function getResultingTopicId(resultData) {
   var topicId = JSON.parse(resultData).id;
-  // Components.utils.reportError("TopicResult is available: " + topicId + " but not of interest anymore..);
   lookmarker.initialized = false;
-  lookmarker.onLoad(); // reload all bookmarks.
+  lookmarker.onLoad(); // reload all items in the deepamehta toolsbar
 }
 
 /** create a resource and relate the note to it */
@@ -200,8 +198,10 @@ var topicOrigin = undefined; // ^^
 function createRelatedTopicNote(url, notetitle, body) {
   // {"id":2541,"uri":"","type_uri":"dm4.notes.note","composite":{"dm4.notes.title":"Test Yea","dm4.notes.text":"<p>asdasd</p>"}}
   var selectedText = cleanUpForJson(body);
-  var notetopic = '{"uri":"","type_uri":"dm4.notes.note","composite":{"dm4.notes.title":"'+notetitle+'","dm4.notes.text":"'+selectedText+'"}}';
-  var webtopic = '{"uri":"","type_uri":"dm4.contacts.resource","composite":{"dm4.contacts.resource_name":"'+getCurrentPageTitle()+'","dm4.webbrowser.url":"'+url+'"}}';
+  var givenTitle = cleanUpForJson(notetitle);
+  var webpageTitle = cleanUpForJson(getCurrentPageTitle());
+  var notetopic = '{"uri":"","type_uri":"dm4.notes.note","composite":{"dm4.notes.title":"'+givenTitle+'","dm4.notes.text":"'+selectedText+'"}}';
+  var webtopic = '{"uri":"","type_uri":"dm4.webbrowser.web_resource","composite":{"dm4.webbrowser.web_resource_description":"'+webpageTitle+'","dm4.webbrowser.url":"'+url+'"}}';
   // 
   // mark down other topic to be able to create it after the result arrived for the first topic..
   topicOrigin = notetopic;
