@@ -5,13 +5,13 @@
   <RDF:Description RDF:about="rdf:#$kz5hd"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
                    em:minVersion="3.6"
-                   em:maxVersion="6.0.*" />
+                   em:maxVersion="7.0.*" />
   <RDF:Description RDF:about="urn:mozilla:install-manifest"
-                   em:id="lookmarker@deepamehta.org"
+                   em:id="{835c9018-c6cc-4994-99f5-3b5c9a0481d5}"
                    em:name="DeepaMehta4 Bookmarker (Lookmarker)"
                    em:version="1.0"
                    em:creator="Malte Reißig"
-                   em:description="Introduce &quot;Resources&quot; to your personal deepaMehta server and turn any selected text into a &quot;Note&quot; associated with a &quot;Resource&quot;."
+                   em:description="Introduce &quot;Web Resources&quot; to your personal deepamehta server and associate &quot;Notes&quot; to them."
                    em:homepageURL="http://github.com/mukil/lookmarker-deepamehta.org"
                    em:optionsURL="chrome://lookmarker/content/options.xul">
     <em:targetApplication RDF:resource="rdf:#$kz5hd"/>

@@ -12,16 +12,22 @@
   
   <popup id="contentAreaContextMenu">
     <menuitem id="context-lookmarker" label="&lookmarkerContext.label;"
-              accesskey="&lookmarkerContext.accesskey;"
-              insertafter="context-stop"
-              oncommand="lookmarker.onMenuItemCommand(event)"/>
+      accesskey="&lookmarkerContext.accesskey;"
+      insertafter="context-stop"
+      oncommand="lookmarker.onMenuItemCommand(event)"/>
   </popup>
 
-  <toolbarpalette id="BrowserToolbarPalette">
-  <toolbarbutton id="lookmarker-toolbar-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-    label="&lookmarkerToolbarButton.label;" tooltiptext="&lookmarkerToolbarButton.tooltip;"
-    oncommand="lookmarker.onToolbarButtonCommand()"/>
+  <toolbarpalette id="BrowserToolbarPalette"> <!-- maybe unnecessary after using addon-bar -->
+    <toolbarbutton id="lookmarker-toolbar-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+      label="&lookmarkerToolbarButton.label;" tooltiptext="&lookmarkerToolbarButton.tooltip;"
+      oncommand="lookmarker.onToolbarButtonCommand()"/>
   </toolbarpalette>
+  
+  <toolbar id="addon-bar">
+    <toolbaritem id="deepaMehtaStatus" align="start">
+      <label id="deepaMehtaStatusLabel" align="start"></label>
+    </toolbaritem>
+  </toolbar>
   
   <!-- 
    <menupopup id="button-popup">
@@ -44,17 +50,17 @@
   <toolbox id="navigator-toolbox">
     <toolbar class="chromeclass-toolbar" toolbarname="&lookmarkerToolbar.name;" customizable="false" id="lookmarker-toolbar" mode="full" autohide="true">
       <!--<label value="View:"/>-->
-      <menubar id="topicmap-menubar">
-          <menu id="topicmap-menubar-menu" label="Topic Maps" oncommand="lookmarker.onOpenTopicmap(event)">
-            <menupopup id="topicmap-menubar-popup">
-            </menupopup>
-          </menu>
+      <menubar id="topicmap-menubar" onclick="lookmarker.onLoadTopicMaps(event)">
+        <menu id="topicmap-menubar-menu" label="Topic Maps" oncommand="lookmarker.onOpenTopicmap(event)">
+          <menupopup id="topicmap-menubar-popup">
+          </menupopup>
+        </menu>
       </menubar>
-      <menubar id="bookmark-menubar">
-          <menu id="bookmark-menubar-menu" label="Web Resources" oncommand="lookmarker.onOpenBookmark(event)">
-            <menupopup id="bookmark-menubar-popup">
-            </menupopup>
-          </menu>
+      <menubar id="bookmark-menubar" onclick="lookmarker.onLoadWebResources(event)">
+        <menu id="bookmark-menubar-menu" label="Web Resources" oncommand="lookmarker.onOpenBookmark(event)">
+          <menupopup id="bookmark-menubar-popup">
+          </menupopup>
+        </menu>
       </menubar>
     </toolbar>
   </toolbox>

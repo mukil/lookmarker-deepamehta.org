@@ -1,32 +1,34 @@
 
-DeepaMehta Tools - Firefox Extension
-====================================
+DeepaMehta Firefox Extension
+============================
 
-This Firefox Extension is a part of the DeepaMehta Tools Package and allows you to bookmark any information resource you are visiting with your browser right into a DeepaMehta database. The name of this extension was simply derived from the book "back of the napkin". In this sense it tries to facilitate all users in the task of informational book keeping, good _looking_ (marking down notes). Once in use you can reveal all your marks and information resources in a geometrical landscape called topic map. A topic map facilitates _seeing_, _imagining_ and _showing_, which basically can mean that it facilitates the communication of informations to yourself and others. 
+This Firefox extension allows you to bookmark the address of any webpage you are visiting with your browser as a "Web Resource" into a deepamehta server of your choice. Furthermore it enables you to store text (resp. hypertext) as a "Note" related to this "Web Resource". This extension also provides an experimental "DeepaMehta Toolbar" which shall help you to easily navigate to all "Web Resources", plus "Topic Maps" available in your deepamehta server. Such a "Topic Map" is an item specific to deepamehta and it facilitates _seeing_, _imagining_ and _showing_ of information, which basically can mean that it facilitates the communication of informations to _yourself_ and _others_. But to be able to start working with the benefits of such a topic map one needs to look out for the information of interest for one, and hang on to them.
 
 DeepaMehta4 is a software platform designed as a think tool.
 <http://github.com/jri/deepamehta>
 
 
-Installation
-------------
+Installation & Usage
+--------------------
 
-The DeepaMehta4 Firefox Tool is typically installed through browsing to the .xpi-archive with your firefox browser, there maybe one for your setup already available in the /target directory of this repository. If you have problems with installing, extract/unzip the beforementioned .xpi archive into a folder and place the extracted folder named "lookmarker@deepamehta.org" directly in your working firefox profile. Such a folder (e.g. on ubuntu) is to find in the users home directory under ".mozilla/firefox/xyz-id.default/extensions/". After you've copied the files into the extensions folder you have to restart your Firefox Browser. You also have to make sure your DeepaMehta installatin is running when starting your Firefox Browser.
-
-The latest version of development is to find 'for testing purposes only' at <https://github.com/mukil/lookmarker-deepamehta.org/blob/master/target/lookmarker@deepamehta.org.xpi>. It was originally developed for Firefox 3.6.x and will still work with that version. Since Firefox 4 is no longer supported and Firefox 5 was already superseded by 6 it is now also prepared to work with the officially current Firefox 6.0.x.
-
-
-Usage
------
-
-After the installation of the plugin you can start using it through pressing the "Notice"-Button (which is an icon showing an eye and you have to drag into your toolbar before via "Customize Toolbar"). You may want to activate the DeepaMehta Toolbar and check out the extensions preferences via your "Add On"-Manager (or the "Tools"-Menu) to be able to store your text selections with parts of their original hypertext markup language (e.g.links). Through pressing 'ALT+V' + 'ALT+T' and then 'ALT+D' you also get kind of a quick access to your DeepaMehta Toolbar.
-
-
-On any webpage you are currently browsing just press the new "Notice"-Button in your toolbar. The address of the information will then be stored as \"Web Resource\"-Topic in DeepaMehta. During this process you have the chance to give the bookmark a new title. Furthermore, you can simply create \"Note\"-Topics after selecting some noteworthy passages of a text via the firefox context menu and store it along with it's source through the "Notice"-Button.
+Please see <https://trac.deepamehta.de/wiki/LookmarkerFirefoxAddon> for an up-to-date installation and usage description.
 
 
 Version History
 ---------------
+**SNAPSHOT** -- Nov 02, 2011
+
+* functional restoration of the "Notice" feature
+* opens all urls in a new browser tab and selects this new tab
+* known issues: storing two notices (text-selections) from the same web resources will fail cause of URL uniqueness
+
+**SNAPSHOT** -- Oct 30, 2011
+
+* compatible with deepamehta-4.0.5
+* compatibility up to firefox 7.0.x
+* improvements: gui notifications, default placement of notice button in addon-bar
+* couple of code-related improvements 
+* known issues: storing two notices (text-selections) from the same web resources will fail cause of URL uniqueness
 
 **SNAPSHOT** -- Aug 21, 2011
 

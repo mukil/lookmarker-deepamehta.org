@@ -6,3 +6,4 @@ overlay   chrome://browser/content/browser.xul  chrome://lookmarker/content/pref
 overlay   chrome://browser/content/browser.xul  chrome://lookmarker/content/ff-overlay.xul
 style chrome://global/content/customizeToolbar.xul chrome://lookmarker/skin/overlay.css
 
+

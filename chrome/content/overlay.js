@@ -1,21 +1,38 @@
 
 /**
- * todo's: match url's, new notification dialog
- * fixme's: prepare values (e.g. resource titles, ) be aware of ":" and """ for properly for being a valid json entity
+ * todo's: 
+ * - find a solution for re-initializing/re-loading all map and web resource topics,
+ * - and make a new notification dialog
+ *
+ * fixme's: prepare values (be also aware of the ":") for json properly
 **/
+
 var lookmarker = {
   prefManager: undefined,
   serviceHorstPost: undefined,
   dmClient: undefined,
   noteAsHTML: true,
   initialized: false,
+  statusLabel: undefined,
+  statusloadError: 'DeepaMehta could not load your data. Probably the server is not running or your preferences are wrong.',
+  statussavedNotice: 'DeepaMehta saved your notice as a web resource.',
+  statussavedNote: 'DeepaMehta saved your note related to this web resource.',
   onLoad: function() {
     // initialization code
-    // 
-    lookmarker.prefManager = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-    lookmarker.serviceHorstPost = lookmarker.prefManager.getCharPref("extensions.lookmarker.service.horstpost");
-    lookmarker.noteAsHTML = lookmarker.prefManager.getBoolPref("extensions.lookmarker.notedown.html");
-    lookmarker.dmClient = lookmarker.serviceHorstPost + "/index.html";
+    lookmarker.prefManager = Components.classes["@mozilla.org/preferences-service;1"].
+      getService(Components.interfaces.nsIPrefBranch);
+    lookmarker.statusLabel = document.getElementById("deepaMehtaStatusLabel");
+    lookmarker.updatePreferences();
+    // new placement of our toolbarbutton and new statuslabel // credits to mike.kaply.com for "new add-on bar" blogpost
+    var addonBar = document.getElementById("addon-bar");
+    if (addonBar) {
+      if (!document.getElementById("lookmarker-toolbar-button")) {
+        // if not yet elsewhere present, place the button in the addon-bar and show it
+        var addonBarCloseButton = document.getElementById("addonbar-closebutton")
+        addonBar.insertItem("lookmarker-toolbar-button", addonBarCloseButton.nextSibling);
+        addonBar.collapsed = false;
+      }
+    }
     // 
     this.strings = document.getElementById("lookmarker-strings");
     this.topicmap_menubar = document.getElementById("topicmap-menubar-popup");
@@ -23,69 +40,80 @@ var lookmarker = {
     // this.topicmap_menulist = document.getElementById("topicmap-menulist-popup");
     if ( !lookmarker.initialized ) {
       // bookmarks
-      getTopicsByType("dm4.webbrowser.web_resource", function responseArrived(result) {
-        var bookmarks = JSON.parse(result);
-        Components.utils.reportError("INFO: loaded " + bookmarks.length + " bookmarks");
-        if (bookmark_menubar.childNodes.length > 0) {
-          // see the following iterative, interesting code snippet (https://developer.mozilla.org/en/DOM/Node.childNodes)
-          while (bookmark_menubar.firstChild) {
-            //The list is LIVE so it will re-index each call
-            bookmark_menubar.removeChild(bookmark_menubar.firstChild);
-          }
-          Components.utils.reportError("INFO: bookmarks reloaded, so we just cleaned up the bookmark-menubar");
-        }
-        for (var i = 0; i < bookmarks.length; i++) {
-          //
-          var bookmark = bookmarks[i];
-          var somemark = document.createElement("menuitem");
-          // 
-          somemark.setAttribute("label", bookmark.value);
-          somemark.setAttribute("value", bookmark.id);
-          somemark.setAttribute("oncommand", lookmarker.onOpenBookmark(undefined));
-          // 
-          bookmark_menubar.appendChild(somemark);
-          // });
-        }
-      });
-      // 
+      lookmarker.populateBookmarks();
       // maps
-      getTopicsByType("dm4.topicmaps.topicmap", function responseArrived(result) {
-        var topicmaps = JSON.parse(result);
-        Components.utils.reportError("INFO: loaded " + topicmaps.length + " maps");
-        if (topicmap_menubar.childNodes.length > 0) {
-          // see the following iterative, interesting code snippet (https://developer.mozilla.org/en/DOM/Node.childNodes)
-          while (topicmap_menubar.firstChild) {
-            //The list is LIVE so it will re-index each call
-            topicmap_menubar.removeChild(topicmap_menubar.firstChild);
-          }
-          Components.utils.reportError("INFO: topicmaps reloaded, so we just cleaned up the topicmap-menubar");
-        }
-        for (var i = 0; i < topicmaps.length; i++) {
-          var topicmap = topicmaps[i];
-          var someitem = document.createElement("menuitem");
-          someitem.setAttribute("label", topicmap.value);
-          someitem.setAttribute("value", topicmap.id);
-          someitem.setAttribute("oncommand", lookmarker.onOpenTopicmap(undefined));
-          topicmap_menubar.appendChild(someitem);
-          // topicmap_menulist.appendChild(menuitem);
-        }
-      });
+      lookmarker.populateTopicmaps();
     }
     // make sure this is called just once..
     lookmarker.initialized = true;
   },
   
+  // Helper to let this scrip operate on the very latest preference settings
   updatePreferences: function(e) { // updates js-client side used variables..
     lookmarker.serviceHorstPost = lookmarker.prefManager.getCharPref("extensions.lookmarker.service.horstpost");
-    lookmarker.dmClient = lookmarker.serviceHorstPost + "/index.html";
+    lookmarker.dmClient = lookmarker.serviceHorstPost;
     lookmarker.noteAsHTML = lookmarker.prefManager.getBoolPref("extensions.lookmarker.notedown.html");
+    // Components.utils.reportError("DEBUG: update scripts preferences, service: " + lookmarker.serviceHorstPost + 
+      // " noteAsHTML: " + lookmarker.noteAsHTML );
   },
+  
+  populateBookmarks: function(e) {
+    getTopicsByType("dm4.webbrowser.web_resource", function responseArrived(result) {
+      var bookmarks = JSON.parse(result);
+      // Components.utils.reportError("DEBUG: loaded " + bookmarks.items.length + " bookmarks");
+      if (bookmark_menubar.childNodes.length > 0) {
+        // see the following iterative interesting code snippet (https://developer.mozilla.org/en/DOM/Node.childNodes)
+        while (bookmark_menubar.firstChild) {
+          //The list is LIVE so it will re-index each call
+          bookmark_menubar.removeChild(bookmark_menubar.firstChild);
+        }
+      }
+      bookmarks.items.sort(sortBy('value', false, function(a){return a.toUpperCase()}));
+      for (var i = 0; i < bookmarks.items.length; i++) {
+        //
+        var bookmark = bookmarks.items[i];
+        var somemark = document.createElement("menuitem");
+        // 
+        somemark.setAttribute("label", bookmark.value);
+        somemark.setAttribute("value", bookmark.id);
+        somemark.setAttribute("oncommand", lookmarker.onOpenBookmark(undefined));
+        // 
+        bookmark_menubar.appendChild(somemark);
+        // });
+      }
+    });
+  },
+  
+  populateTopicmaps: function (e) {
+    getTopicsByType("dm4.topicmaps.topicmap", function responseArrived(result) {
+      var topicmaps = JSON.parse(result);
+      // Components.utils.reportError("DEBUG: loaded " + topicmaps.items.length + " maps");
+      if (topicmap_menubar.childNodes.length > 0) {
+        // see the following iterative interesting code snippet (https://developer.mozilla.org/en/DOM/Node.childNodes)
+        while (topicmap_menubar.firstChild) {
+          //The list is LIVE so it will re-index each call
+          topicmap_menubar.removeChild(topicmap_menubar.firstChild);
+        }
+      }
+      topicmaps.items.sort(sortBy('value', false, function(a){return a.toUpperCase()}));
+      for (var i = 0; i < topicmaps.items.length; i++) {
+        var topicmap = topicmaps.items[i];
+        var someitem = document.createElement("menuitem");
 
+        someitem.setAttribute("label", topicmap.value);
+        someitem.setAttribute("value", topicmap.id);
+        someitem.setAttribute("oncommand", lookmarker.onOpenTopicmap(undefined));
+        topicmap_menubar.appendChild(someitem);
+        // topicmap_menulist.appendChild(menuitem);
+      }
+    });
+  },
+  
+  // Webpage Context Menu  - Notice-Item Handler
   onMenuItemCommand: function(e) {
     lookmarker.updatePreferences(); // get current service Url of the PreferenceMananger..
     // 
-    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                                  .getService(Components.interfaces.nsIPromptService);
+    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
     var selectedText = getCursorSelection();
     var currentUrl = getCurrentURL();
     var title = getCurrentPageTitle();
@@ -102,17 +130,18 @@ var lookmarker = {
         // bookmark the resource, take a note and relate both with each other..
         // createRelatedTopicNote(currentUrl, title, selectedText);
         createRelatedTopicNote(currentUrl, input.value, selectedText);
-        Components.utils.reportError("INFO: created relate Note: " + input.value + " and Resource ("+currentUrl+") ");
+        // Components.utils.reportError("DEBUG: created relate Note: " + input.value + " and Resource ("+currentUrl+") ");
+        lookmarker.statusLabel.value = lookmarker.statussavedNote;
       } else {
-        Components.utils.reportError("INFO: associating Note-to-Resource aborted...");
+        Components.utils.reportError("ERROR: associating Note-to-Resource aborted...");
       }
     }
   },
-
+  
+  // Main Firefox Toolbar - Notice-Button Handler
   onToolbarButtonCommand: function(e) {
     lookmarker.updatePreferences(); // get current service Url of the PreferenceMananger..
-    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                                  .getService(Components.interfaces.nsIPromptService);
+    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
     var title = getCurrentPageTitle();
     var currentUrl = getCurrentURL();
     var check = {value: false};                  // default the checkbox to false
@@ -122,28 +151,41 @@ var lookmarker = {
     if (result) {
       // 
       createTopicResource(currentUrl, input.value);
-      Components.utils.reportError("INFO: send Info-Note: " + input.value + " ("+currentUrl+") to " + lookmarker.serviceHorstPost);
+      // Components.utils.reportError("DEBUG: send Info-Note: " + input.value + " ("+currentUrl+") to " + lookmarker.serviceHorstPost);
+      lookmarker.statusLabel.value = lookmarker.statussavedNotice;
     } else {
-      Components.utils.reportError("INFO: sending Info-Note aborted...");
+      Components.utils.reportError("ERROR: sending Info-Note aborted...");
     }
     
   },
   
+  // Preferences Handler - User wants to adjust add-on settings
   onOpenPreferenceDialog: function(e) {
     lookmarker.serviceHorstPost = lookmarker.prefManager.getCharPref("extensions.lookmarker.service.horstpost");
     var dialogSettings = { service: lookmarker.serviceHorstPost, notedown: lookmarker.noteAsHTML };
     window.openDialog("chrome://lookmarker/content/options.xul", "deepamehta-extension-preferences", "chrome,titlebar,toolbar,centerscreen,modal", this, dialogSettings);
   },
   
+  onLoadTopicMaps: function(e) {
+    lookmarker.populateTopicmaps();
+  },
+  
+  onLoadWebResources: function(e) {
+    lookmarker.populateBookmarks();
+  },
+  
+  // DeepaMehta Toolbar Handler - User clicked on a Topic Map-Item
   onOpenTopicmap: function(e) {
     lookmarker.updatePreferences(); // get current service Url of the PreferenceMananger..
     if (e != undefined) {
       var topicmapId = e.target.getAttribute("value");
       Components.utils.reportError("open map => " + topicmapId);
-      navToTopicmap(topicmapId);
-    }  
+      var navToUrl = lookmarker.dmClient + "/topicmap/" + topicmapId;
+      openUrlInNewTabAndMakeTabActive(navToUrl);
+    }
   },
   
+  // DeepaMehta Toolbar Handler - User clicked on a Web Resource-Item
   onOpenBookmark: function(e) {
     lookmarker.updatePreferences(); // get current service Url of the PreferenceMananger..
     if (e != undefined) {
@@ -151,9 +193,7 @@ var lookmarker = {
       getTopic(bookmark, function(response) {
         var topic = JSON.parse(response, function (key, value) {
           if (value && typeof value === 'string' && key == 'dm4.webbrowser.url') {
-            var currentWindow = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-              .getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
-            currentWindow.window.content.location.href = value;
+            openUrlInNewTabAndMakeTabActive(value);
           }
         });
       });
@@ -187,8 +227,10 @@ function createTopicResource(url, title) {
 
 function getResultingTopicId(resultData) {
   var topicId = JSON.parse(resultData).id;
-  lookmarker.initialized = false;
-  lookmarker.onLoad(); // reload all items in the deepamehta toolsbar
+  // lookmarker.initialized = false;
+  // lookmarker.onLoad(); // reload all items in the deepamehta toolsbar
+  lookmarker.populateTopicmaps();
+  lookmarker.populateBookmarks();
 }
 
 /** create a resource and relate the note to it */
@@ -196,10 +238,11 @@ var topicToRelate = undefined; // used in the createRelatedTopicHandler..
 var topicOrigin = undefined; // ^^
 // 
 function createRelatedTopicNote(url, notetitle, body) {
-  // {"id":2541,"uri":"","type_uri":"dm4.notes.note","composite":{"dm4.notes.title":"Test Yea","dm4.notes.text":"<p>asdasd</p>"}}
+  // 
   var selectedText = cleanUpForJson(body);
   var givenTitle = cleanUpForJson(notetitle);
   var webpageTitle = cleanUpForJson(getCurrentPageTitle());
+  // 
   var notetopic = '{"uri":"","type_uri":"dm4.notes.note","composite":{"dm4.notes.title":"'+givenTitle+'","dm4.notes.text":"'+selectedText+'"}}';
   var webtopic = '{"uri":"","type_uri":"dm4.webbrowser.web_resource","composite":{"dm4.webbrowser.web_resource_description":"'+webpageTitle+'","dm4.webbrowser.url":"'+url+'"}}';
   // 
@@ -224,27 +267,27 @@ function createRelatedTopicNote(url, notetitle, body) {
 // --- HTTP POST Requests
 // --
 
-function sendAssocPost(body, resultHandler) {
+function sendAssocPost(body, _resultHandler) {
     var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Components.interfaces.nsIXMLHttpRequest);
     var url = lookmarker.serviceHorstPost + "/core/association";
-    // ### TODO Components.utils.reportError("sendAssocPOST => \"" + body + "\"");
     req.open("POST", url);
     req.setRequestHeader('Content-Type', 'application/json');
     req.overrideMimeType("application/json;text/plain");
     req.onreadystatechange = function (aEvt) {
       if (req.readyState == 4) {
-         if (req.status != 200)
+        if (req.status != 200) {
           Components.utils.reportError("AssocPOST failed: " + req.error + ":url:" + url);
-         else
-          if (resultHandler != undefined) {
-            resultHandler(req.responseText);
+        } else {
+          if (_resultHandler != undefined) {
+            _resultHandler(req.responseText);
           }
+        }
       }
     };
     req.send(body);
 }
 
-function sendTopicPost(body, resultHandler) {
+function sendTopicPost(body, _resultHandler) {
     var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Components.interfaces.nsIXMLHttpRequest);
     var url = lookmarker.serviceHorstPost + "/core/topic";
     req.open("POST", url);
@@ -255,7 +298,7 @@ function sendTopicPost(body, resultHandler) {
          if (req.status != 200)
           Components.utils.reportError("TopicPOST failed: " + req.error + ":url:" + url);
          else
-          if ( resultHandler != undefined ) resultHandler(req.responseText);
+          if ( _resultHandler != undefined ) _resultHandler(req.responseText);
       }
     };
     req.send(body);
@@ -285,20 +328,22 @@ function createRelatedTopicHandler(resultData) {
     // create the somehow to be related topic
     sendTopicPost(topicOrigin, associateResultHandler);
   } else {
-    Components.utils.reportError("*** createRelatedTopicHandler has no topic ("+topicOrigin+") to relate to origin (" + topicToRelate.id + ")");
+    Components.utils.reportError("*** no topic " + topicToRelate.id + " could be related to.. skipping Note-creation");
   }
 }
 
+/** make sure our topicOrigin was set before calling  **/
 function associateResultHandler(resultData) {
-  // topicId of the related topic
+  // get the formerly cached topicId of the related topic
   topicOrigin = JSON.parse(resultData);
   // 
   if ( topicToRelate.id != undefined && topicOrigin.id != undefined ) {
-    // createAssociation.. between 
+    // build association..
     var association = '{"type_uri":"dm4.core.association","role_1":{"topic_id":'+topicOrigin.id+',"role_type_uri":"dm4.core.default"},"role_2":{"topic_id":'+topicToRelate.id+',"role_type_uri":"dm4.core.default"}}';
+    // create association
     sendAssocPost(association);
-    Components.utils.reportError("Associating \"" + topicOrigin.value + "\"(id:" + topicOrigin.id + ")  with \"" + topicToRelate.value + "\"(id:" + topicOrigin.id + ")");
-    // topicToRelate.id && relatedTopicId..
+  } else {
+    Components.utils.reportError("*** could not associate \"" + topicOrigin.value + "\"(id:" + topicOrigin.id + ")  with \"" + topicToRelate.value + "\"(id:" + topicOrigin.id + ")");
   }
 }
 
@@ -314,13 +359,14 @@ function getTopicsByType(type_uri, callback) {
     req.open("GET", url);
     req.setRequestHeader('Content-Type', 'application/json');
     req.overrideMimeType("application/json;text/plain");
-    Components.utils.reportError("INFO: " + lookmarker.serviceHorstPost + "/core/topic/by_type/"+encodeURIComponent(type_uri, "UTF-8"));
+    // Components.utils.reportError("DEBUG: " + lookmarker.serviceHorstPost + "/core/topic/by_type/"+encodeURIComponent(type_uri, "UTF-8"));
     req.onreadystatechange = function (aEvt) {
       if (req.readyState == 4) {
-         if(req.status != 200)
-          Components.utils.reportError("GET TopicsByType failed: " + req.error);
-         else
+         if(req.status != 200) {
+          lookmarker.statusLabel.value = lookmarker.statusloadError;
+         } else {
           callback(req.responseText);
+         }
       }
     };
     req.send(null);
@@ -328,16 +374,16 @@ function getTopicsByType(type_uri, callback) {
 
 function getTopicByValueAndType(type_uri, value, callback) {
     var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Components.interfaces.nsIXMLHttpRequest);
-    Components.utils.reportError("DEBUG: url is " + value + " and " + encodeURIComponent(value, "UTF-8"));
+    // Components.utils.reportError("DEBUG: url is " + value + " and " + encodeURIComponent(value, "UTF-8"));
     var url = lookmarker.serviceHorstPost+"/core/topic/by_value/" + type_uri + "/" + encodeURIComponent(value, "UTF-8");
     req.open("GET", url);
     req.setRequestHeader('Content-Type', 'application/json');
     req.overrideMimeType("application/json;text/plain");
-    Components.utils.reportError("INFO: " + lookmarker.serviceHorstPost + "/core/topic/"+type_uri+"/value/"+encodeURIComponent(value, "UTF-8"));
+    // Components.utils.reportError("DEBUG: " + lookmarker.serviceHorstPost + "/core/topic/"+type_uri+"/value/"+encodeURIComponent(value, "UTF-8"));
     req.onreadystatechange = function (aEvt) {
       if (req.readyState == 4) {
         if(req.status != 200) {
-          Components.utils.reportError("GET TopicsByTypeAndValue NULL: " + req.status);
+          lookmarker.statusLabel.value = lookmarker.statusloadError;
           callback(undefined);
         } else {
           callback(req.responseText);
@@ -353,11 +399,11 @@ function getTopic(id, callback) {
     req.open("GET", url);
     req.setRequestHeader('Content-Type', 'application/json');
     req.overrideMimeType("application/json;text/plain");
-    Components.utils.reportError("INFO: " + lookmarker.serviceHorstPost + "/core/topic/"+id);
+    // Components.utils.reportError("DEBUG: " + lookmarker.serviceHorstPost + "/core/topic/"+id);
     req.onreadystatechange = function (aEvt) {
       if (req.readyState == 4) {
          if(req.status != 200)
-          Components.utils.reportError("GET Topic " + id + " => " + req.error);
+          lookmarker.statusLabel.value = lookmarker.statusloadError;
          else
           callback(req.responseText);
       }
@@ -374,8 +420,7 @@ function getTopic(id, callback) {
 /** getSelectedHTML incl. hyperlinks at level of depth 0 or 1 in the selected dom.. */
 function getCursorSelection() {
 
-    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-      .getService(Components.interfaces.nsIWindowMediator);
+    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator);
     var mainWindow = wm.getMostRecentWindow("navigator:browser");
     var tabBrowser = mainWindow.getBrowser();
     var selection = tabBrowser.contentWindow.getSelection();
@@ -460,26 +505,39 @@ function autoCompleteHref(value, docFrag) {
 }
 
 function getCurrentURL() {
-    var currentWindow = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-      .getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
+    var currentWindow = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
     var currBrowser = currentWindow.getBrowser();
     var currURL = currBrowser.currentURI.spec;
     return currURL;
 }
 
-function navToTopicmap(id) {
-    var currentWindow = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-      .getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
-    var navToUrl = lookmarker.dmClient + "?topicmap=" + id;
-    currentWindow.window.content.location.href = navToUrl;
+function openUrlInNewTabAndMakeTabActive(url) {
+    var currentWindow = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
+    currentWindow.gBrowser.selectedTab = currentWindow.gBrowser.addTab(url);
 }
 
 function getCurrentPageTitle() {
-    var currentWindow = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-      .getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
+    var currentWindow = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser"); 
     var currBrowser = currentWindow.getBrowser();
     var currTitle = currBrowser.contentTitle;
     return currTitle;
 }
+
+// credits from lazy mukil to stackoverflow user http://stackoverflow.com/users/43089/triptych
+function sortBy(field, reverse, primer) {
+  reverse = (reverse) ? -1 : 1;
+  return function(a,b) {
+   a = a[field];
+   b = b[field];
+   if (typeof(primer) != 'undefined'){
+       a = primer(a);
+       b = primer(b);
+   }
+   if (a<b) return reverse * -1;
+   if (a>b) return reverse * 1;
+   return 0;
+  }
+}
+
 
 window.addEventListener("load", lookmarker.onLoad, false);

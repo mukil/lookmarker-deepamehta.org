@@ -3,13 +3,29 @@
 {
   color: red ! important;
 }
+
 #lookmarker-toolbar-button
 {
   list-style-image: url("chrome://lookmarker/skin/eyeconClear-24.png");
   -moz-image-region: rect(0px 24px 24px 0px);
 }
+
 #lookmarker-toolbar-button:hover
 {
   list-style-image: url("chrome://lookmarker/skin/eyeconClear-24.png");
   background-color: #000088;
+}
+
+#addon-bar #lookmarker-toolbar-button {
+  list-style-image: url("chrome://lookmarker/skin/eyeconClear-20.png");
+  -moz-image-region: rect(0px 19px 20px 0px);
+}
+
+#addon-bar #lookmarker-toolbar-button:hover {
+  list-style-image: url("chrome://lookmarker/skin/eyeconClear-20.png");
+  background-color: #000088;
+}
+
+#deepaMehtaStatus {
+  padding: 8px; float:left; font-weight: bold; font-size: 10px;
 }
