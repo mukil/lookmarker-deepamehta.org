@@ -7,15 +7,20 @@ This Firefox extension allows you to bookmark the address of any webpage you are
 DeepaMehta4 is a software platform designed as a think tool.
 <http://github.com/jri/deepamehta>
 
+[![Flattr this git repo](http://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/submit/auto?user_id=mukil&url=https://github.com/mukil/lookmarker-deepamehta.org&title=DeepaMehta Firefox Extension&language=en_GB&tags=github&category=software) 
 
 Installation & Usage
 --------------------
 
-Please see <https://trac.deepamehta.de/wiki/LookmarkerFirefoxAddon> for an up-to-date installation and usage description.
+Please understand the technical risks and visit the plugins page on <https://www.deepamehta.de/en/content/deepamehta-firefox-plugin> for an up-to-date installation and usage description.
 
 
 Version History
 ---------------
+**RC1** -- Feb 29, 2012
+* fixed URL uniqueness checks and re-usage when e.g. saving text-selections on already know web resources/bookmarks
+* compatible with deepamehta 4.0.9 and up to firefox 10.0.x
+
 **SNAPSHOT** -- Nov 02, 2011
 
 * functional restoration of the "Notice" feature

@@ -1,11 +1,9 @@
 
 /**
- * todo's: 
- * - find a solution for re-initializing/re-loading all map and web resource topics,
- * - and make a new notification dialog
- *
- * fixme's: prepare values (be also aware of the ":") for json properly
-**/
+ * FIXME`s prepare values (be also aware of the ":") for json properly, 
+ * and already existing URLs should not be used directly to get "Notes" associated... 
+ * instead one has to query for the corresponding "Web Resources" of the "URL" and use that instead
+ **/
 
 var lookmarker = {
   prefManager: undefined,
@@ -14,9 +12,11 @@ var lookmarker = {
   noteAsHTML: true,
   initialized: false,
   statusLabel: undefined,
-  statusloadError: 'DeepaMehta could not load your data. Probably the server is not running or your preferences are wrong.',
-  statussavedNotice: 'DeepaMehta saved your notice as a web resource.',
-  statussavedNote: 'DeepaMehta saved your note related to this web resource.',
+  statusloadError: 'DeepaMehta could not load your data. Is your server running resp. are your preferences set correctly?',
+  statussavedNotice: 'DeepaMehta saved current URL.',
+  statusdoubledURL: 'DeepaMehta already knows this URL, doing nothing.',
+  statusdoubledNotice: 'DeepaMehta already knows this URL, relating your notice to it.',
+  statussavedNote: 'DeepaMehta saved your note related to the current web resource.',
   onLoad: function() {
     // initialization code
     lookmarker.prefManager = Components.classes["@mozilla.org/preferences-service;1"].
@@ -124,16 +124,18 @@ var lookmarker = {
       var title = getCurrentPageTitle();
       var check = {value: false};                  // default the checkbox to false
       var input = {value: title};                  // default the edit field to Bob
+      // FIXME: noteTitle is defined when i wouldn`t expect it.. method call always returns something..
       var noteTitle = promptService.prompt(null, "Title of this Notice", "Give your selection a proper title: ", input, null, check);
       // result is true if OK is pressed, false if Cancel. input.value holds the value of the edit field if "OK" was pressed
       if (noteTitle) {
         // bookmark the resource, take a note and relate both with each other..
-        // createRelatedTopicNote(currentUrl, title, selectedText);
-        createRelatedTopicNote(currentUrl, input.value, selectedText);
+        // createRelatedWebTopic(currentUrl, title, selectedText);
+        createRelatedWebTopic(currentUrl, input.value, selectedText);
         // Components.utils.reportError("DEBUG: created relate Note: " + input.value + " and Resource ("+currentUrl+") ");
         lookmarker.statusLabel.value = lookmarker.statussavedNote;
       } else {
         Components.utils.reportError("ERROR: associating Note-to-Resource aborted...");
+        // lookmarker.statusLabel.value = lookmarker.statusnotsavedNote;
       }
     }
   },
@@ -154,7 +156,7 @@ var lookmarker = {
       // Components.utils.reportError("DEBUG: send Info-Note: " + input.value + " ("+currentUrl+") to " + lookmarker.serviceHorstPost);
       lookmarker.statusLabel.value = lookmarker.statussavedNotice;
     } else {
-      Components.utils.reportError("ERROR: sending Info-Note aborted...");
+      Components.utils.reportError("INFO: sending Info-Note aborted by user...");
     }
     
   },
@@ -179,7 +181,7 @@ var lookmarker = {
     lookmarker.updatePreferences(); // get current service Url of the PreferenceMananger..
     if (e != undefined) {
       var topicmapId = e.target.getAttribute("value");
-      Components.utils.reportError("open map => " + topicmapId);
+      // Components.utils.reportError("open map => " + topicmapId);
       var navToUrl = lookmarker.dmClient + "/topicmap/" + topicmapId;
       openUrlInNewTabAndMakeTabActive(navToUrl);
     }
@@ -191,11 +193,18 @@ var lookmarker = {
     if (e != undefined) {
       var bookmark = e.target.getAttribute("value");
       getTopic(bookmark, function(response) {
+        var url;
         var topic = JSON.parse(response, function (key, value) {
-          if (value && typeof value === 'string' && key == 'dm4.webbrowser.url') {
-            openUrlInNewTabAndMakeTabActive(value);
+          if (value && typeof value === 'string' && key == 'value') {
+            // key == 'dm4.webbrowser.url' 
+            if (value.lastIndexOf("http", 0) === 0 || value.lastIndexOf("www", 0) === 0 ) {
+              // found an efficient string.startsWith() answer from mark byers on stack overflow
+              // if this is somewhat like an url.. we keep the last to open it
+              url = value;
+            }
           }
         });
+        openUrlInNewTabAndMakeTabActive(url);
       });
     }
   }
@@ -207,37 +216,37 @@ var lookmarker = {
 // --
 
 /** 
-  * 
-  **/
+ ** called when toolbar "Notice"-Button was pressed
+ ** a new web resource may be created..
+ **/
 
 function createTopicResource(url, title) {
   //
   var webpageTitle = cleanUpForJson(title);
   var webtopic = '{"uri":"","type_uri":"dm4.webbrowser.web_resource","composite":{"dm4.webbrowser.web_resource_description":"'+webpageTitle+'","dm4.webbrowser.url":"'+url+'"}}';
+  // checks if topic with given url already exists
   getTopicByValueAndType('dm4.webbrowser.url', url, function(responseText) {
     //
     if (responseText != undefined) {
       // ### Notify user and load existing Bookmark, may wants to change title/name of URL 
-    } else {
+      lookmarker.statusLabel.value = lookmarker.statusdoubledURL;
+    } else { // undefined => no topic like this known.. go on create it.
       sendTopicPost(webtopic, getResultingTopicId);
     }
   });
-  // sendTopicPost(webtopic, getResultingTopicId);
 }
 
 function getResultingTopicId(resultData) {
   var topicId = JSON.parse(resultData).id;
-  // lookmarker.initialized = false;
-  // lookmarker.onLoad(); // reload all items in the deepamehta toolsbar
   lookmarker.populateTopicmaps();
   lookmarker.populateBookmarks();
 }
 
-/** create a resource and relate the note to it */
 var topicToRelate = undefined; // used in the createRelatedTopicHandler..
 var topicOrigin = undefined; // ^^
-// 
-function createRelatedTopicNote(url, notetitle, body) {
+
+/** create a resource and relate the note to it */
+function createRelatedWebTopic(url, notetitle, body) {
   // 
   var selectedText = cleanUpForJson(body);
   var givenTitle = cleanUpForJson(notetitle);
@@ -250,11 +259,9 @@ function createRelatedTopicNote(url, notetitle, body) {
   topicOrigin = notetopic;
   // send resource (first) topic 
   getTopicByValueAndType('dm4.webbrowser.url', url, function(responseText) {
-    //
     if (responseText != undefined) {
-      Components.utils.reportError("URL-Topic Match!... " + responseText);
-      // ### TODO reuse WEBPAGE-Topic instead of URL-Topic
-      sendTopicPost(responseText, createRelatedTopicHandler);
+      // just saving the "Notice" and associating it to the just loaded URL.
+      createRelatedTopicHandler(responseText);
     } else {
       sendTopicPost(webtopic, createRelatedTopicHandler);
     }
@@ -325,7 +332,7 @@ function createRelatedTopicHandler(resultData) {
   topicToRelate = JSON.parse(resultData); // mark down the resource topic (now with ID) for later usage..
   // 
   if (topicOrigin != undefined) {
-    // create the somehow to be related topic
+    // create the to be related topic
     sendTopicPost(topicOrigin, associateResultHandler);
   } else {
     Components.utils.reportError("*** no topic " + topicToRelate.id + " could be related to.. skipping Note-creation");
@@ -372,6 +379,9 @@ function getTopicsByType(type_uri, callback) {
     req.send(null);
 }
 
+/** if a topic of given type with given value is already known to dm, it is returned.. 
+ ** otheriwse call given like: handler(undefined)..
+ **/
 function getTopicByValueAndType(type_uri, value, callback) {
     var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Components.interfaces.nsIXMLHttpRequest);
     // Components.utils.reportError("DEBUG: url is " + value + " and " + encodeURIComponent(value, "UTF-8"));
@@ -382,11 +392,13 @@ function getTopicByValueAndType(type_uri, value, callback) {
     // Components.utils.reportError("DEBUG: " + lookmarker.serviceHorstPost + "/core/topic/"+type_uri+"/value/"+encodeURIComponent(value, "UTF-8"));
     req.onreadystatechange = function (aEvt) {
       if (req.readyState == 4) {
-        if(req.status != 200) {
+        if(req.status == 500) { // AMBIGUITY ERROR
+          // internal server error... not saving URL again..
           lookmarker.statusLabel.value = lookmarker.statusloadError;
-          callback(undefined);
-        } else {
-          callback(req.responseText);
+        } else if (req.status != 200) { // NOTHING FOUND
+          callback(undefined); // save URL
+        } else if (req.status == 200) { // OK
+          callback(req.responseText); // pass identified, loaded topic to firefox ui..
         }
       }
     };
@@ -402,10 +414,11 @@ function getTopic(id, callback) {
     // Components.utils.reportError("DEBUG: " + lookmarker.serviceHorstPost + "/core/topic/"+id);
     req.onreadystatechange = function (aEvt) {
       if (req.readyState == 4) {
-         if(req.status != 200)
+        if(req.status != 200) {
           lookmarker.statusLabel.value = lookmarker.statusloadError;
-         else
+        } else {
           callback(req.responseText);
+        }
       }
     };
     req.send(null);
@@ -459,7 +472,7 @@ function getCursorSelection() {
             var childNode = collection[i].childNodes[0];
             if (childNode.nodeName == "A") {
               noteBody += '<' + childNode.nodeName.toLowerCase() + '';
-              if (childNode.attributes != null) {
+              if (childNode != undefined && childNode.attributes != null) {
                 for ( var k = 0; k < childNode.attributes.length; k++) {
                   var childAttribute = XPCNativeWrapper.unwrap(childNode.attributes[k]); // thanks to mozilla add-on forum
                   if ( childAttribute.name == "class" || childAttribute.name == "style" 

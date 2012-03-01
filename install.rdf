@@ -5,14 +5,14 @@
   <RDF:Description RDF:about="rdf:#$kz5hd"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
                    em:minVersion="3.6"
-                   em:maxVersion="7.0.*" />
+                   em:maxVersion="10.0.*" />
   <RDF:Description RDF:about="urn:mozilla:install-manifest"
-                   em:id="{835c9018-c6cc-4994-99f5-3b5c9a0481d5}"
-                   em:name="DeepaMehta4 Bookmarker (Lookmarker)"
+                   em:id="lookmarker@deepamehta.org"
+                   em:name="DeepaMehta 4 Notetaker"
                    em:version="1.0"
                    em:creator="Malte Reißig"
-                   em:description="Introduce &quot;Web Resources&quot; to your personal deepamehta server and associate &quot;Notes&quot; to them."
-                   em:homepageURL="http://github.com/mukil/lookmarker-deepamehta.org"
+                   em:description="Bookmarking and Notetaking. Introduce and navigate &quot;Web Resources&quot; to and form deepamehta and associate &quot;Notes&quot; to them easily."
+                   em:homepageURL="https://www.deepamehta.de/en/content/deepamehta-firefox-plugin"
                    em:optionsURL="chrome://lookmarker/content/options.xul">
     <em:targetApplication RDF:resource="rdf:#$kz5hd"/>
   </RDF:Description>
