@@ -2,7 +2,7 @@
 DeepaMehta Firefox Extension
 ============================
 
-This Firefox extension allows you to bookmark the address of any webpage you are visiting with your browser as a "Web Resource" into a deepamehta server of your choice. Furthermore it enables you to store text (resp. hypertext) as a "Note" related to this "Web Resource". This extension also provides an experimental "DeepaMehta Toolbar" which shall help you to easily navigate to all "Web Resources", plus "Topic Maps" available in your deepamehta server. Such a "Topic Map" is an item specific to deepamehta and it facilitates _seeing_, _imagining_ and _showing_ of information, which basically can mean that it facilitates the communication of informations to _yourself_ and _others_. But to be able to start working with the benefits of such a topic map one needs to look out for the information of interest for one, and hang on to them.
+Lookmarker (a web browser plugin) let users extract individual structured items from web pages as they browse, and store and annotate them in a shared repository for access by others.
 
 DeepaMehta4 is a software platform designed as a think tool.
 <http://github.com/jri/deepamehta>
@@ -17,17 +17,21 @@ Please understand the technical risks and visit the plugins page on <https://www
 
 Version History
 ---------------
-**RC1** -- Feb 29, 2012
+**1.0-RC2** -- Jul 10, 2012
+* compatibility upgrade (dm-4.0.11, ff-13.0.x)
+* minor code improvements (commenting, logging, indention)
+
+**1.0-RC1** -- Feb 29, 2012
 * fixed URL uniqueness checks and re-usage when e.g. saving text-selections on already know web resources/bookmarks
 * compatible with deepamehta 4.0.9 and up to firefox 10.0.x
 
-**SNAPSHOT** -- Nov 02, 2011
+**1.0-SNAPSHOT** -- Nov 02, 2011
 
 * functional restoration of the "Notice" feature
 * opens all urls in a new browser tab and selects this new tab
 * known issues: storing two notices (text-selections) from the same web resources will fail cause of URL uniqueness
 
-**SNAPSHOT** -- Oct 30, 2011
+**1.0-SNAPSHOT** -- Oct 30, 2011
 
 * compatible with deepamehta-4.0.5
 * compatibility up to firefox 7.0.x
@@ -35,7 +39,7 @@ Version History
 * couple of code-related improvements 
 * known issues: storing two notices (text-selections) from the same web resources will fail cause of URL uniqueness
 
-**SNAPSHOT** -- Aug 21, 2011
+**1.0-SNAPSHOT** -- Aug 21, 2011
 
 * compatible with DeepaMehta 4.0.3
 * basic set of features is available
@@ -47,4 +51,4 @@ Version History
 
 ------------
 Author: Malte Reißig malte aed deepamehta.org  
-Last Modified: August 20, 2011
+Last Modified: July 10, 2012
