@@ -12,13 +12,14 @@ var lookmarker = {
   noteAsHTML: true,
   initialized: false,
   statusLabel: undefined,
-  statusloadError: 'DeepaMehta could not load your data. Is your server running resp. are your preferences set correctly?',
+  statusloadError: 'DeepaMehta could not load your data. Is your server running? Are your preferences set correctly?',
   statussavedNotice: 'DeepaMehta saved current URL.',
-  statusdoubledURL: 'DeepaMehta already knows this URL, doing nothing.',
+  statusdoubledURL: 'DeepaMehta already knows this URL, added nothing.',
   statusdoubledNotice: 'DeepaMehta already knows this URL, relating your notice to it.',
   statussavedNote: 'DeepaMehta saved your note related to the current web resource.',
   onLoad: function() {
-    // initialization code
+    // onLoad code
+    dump("DEBUG: onLoad is called... ");
     lookmarker.prefManager = Components.classes["@mozilla.org/preferences-service;1"].
       getService(Components.interfaces.nsIPrefBranch);
     lookmarker.statusLabel = document.getElementById("deepaMehtaStatusLabel");
@@ -39,10 +40,14 @@ var lookmarker = {
     this.bookmark_menubar = document.getElementById("bookmark-menubar-popup");
     // this.topicmap_menulist = document.getElementById("topicmap-menulist-popup");
     if ( !lookmarker.initialized ) {
+      dump("DEBUG: initialization starts ... \n");
       // bookmarks
       lookmarker.populateBookmarks();
+      dump("DEBUG: loaded web resources, populated popup-menu ... \n");
       // maps
       lookmarker.populateTopicmaps();
+      dump("DEBUG: loaded topic maps, populated popup-menu ... \n");
+      dump("DEBUG: initialization ended! \n");
     }
     // make sure this is called just once..
     lookmarker.initialized = true;
@@ -53,14 +58,11 @@ var lookmarker = {
     lookmarker.serviceHorstPost = lookmarker.prefManager.getCharPref("extensions.lookmarker.service.horstpost");
     lookmarker.dmClient = lookmarker.serviceHorstPost;
     lookmarker.noteAsHTML = lookmarker.prefManager.getBoolPref("extensions.lookmarker.notedown.html");
-    // Components.utils.reportError("DEBUG: update scripts preferences, service: " + lookmarker.serviceHorstPost + 
-      // " noteAsHTML: " + lookmarker.noteAsHTML );
   },
   
   populateBookmarks: function(e) {
     getTopicsByType("dm4.webbrowser.web_resource", function responseArrived(result) {
       var bookmarks = JSON.parse(result);
-      // Components.utils.reportError("DEBUG: loaded " + bookmarks.items.length + " bookmarks");
       if (bookmark_menubar.childNodes.length > 0) {
         // see the following iterative interesting code snippet (https://developer.mozilla.org/en/DOM/Node.childNodes)
         while (bookmark_menubar.firstChild) {
@@ -79,15 +81,15 @@ var lookmarker = {
         somemark.setAttribute("oncommand", lookmarker.onOpenBookmark(undefined));
         // 
         bookmark_menubar.appendChild(somemark);
-        // });
       }
+      dump("INFO: " + bookmarks.items.length + " bookmarks loaded" + "\n");
     });
   },
   
   populateTopicmaps: function (e) {
     getTopicsByType("dm4.topicmaps.topicmap", function responseArrived(result) {
       var topicmaps = JSON.parse(result);
-      // Components.utils.reportError("DEBUG: loaded " + topicmaps.items.length + " maps");
+      // dump("DEBUG: loaded " + topicmaps.items.length + " maps");
       if (topicmap_menubar.childNodes.length > 0) {
         // see the following iterative interesting code snippet (https://developer.mozilla.org/en/DOM/Node.childNodes)
         while (topicmap_menubar.firstChild) {
@@ -106,6 +108,7 @@ var lookmarker = {
         topicmap_menubar.appendChild(someitem);
         // topicmap_menulist.appendChild(menuitem);
       }
+      dump("INFO: " + topicmaps.items.length + " topic maps loaded" + "\n");
     });
   },
   
@@ -113,7 +116,8 @@ var lookmarker = {
   onMenuItemCommand: function(e) {
     lookmarker.updatePreferences(); // get current service Url of the PreferenceMananger..
     // 
-    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+      .getService(Components.interfaces.nsIPromptService);
     var selectedText = getCursorSelection();
     var currentUrl = getCurrentURL();
     var title = getCurrentPageTitle();
@@ -125,16 +129,18 @@ var lookmarker = {
       var check = {value: false};                  // default the checkbox to false
       var input = {value: title};                  // default the edit field to Bob
       // FIXME: noteTitle is defined when i wouldn`t expect it.. method call always returns something..
-      var noteTitle = promptService.prompt(null, "Title of this Notice", "Give your selection a proper title: ", input, null, check);
-      // result is true if OK is pressed, false if Cancel. input.value holds the value of the edit field if "OK" was pressed
+      var noteTitle = promptService.prompt(null, 
+        "Title of this Notice", "Give your selection a proper title: ", input, null, check);
+      // result is true if OK is pressed, false if Cancel. 
+      // input.value holds the value of the edit field if "OK" was pressed
       if (noteTitle) {
         // bookmark the resource, take a note and relate both with each other..
         // createRelatedWebTopic(currentUrl, title, selectedText);
         createRelatedWebTopic(currentUrl, input.value, selectedText);
-        // Components.utils.reportError("DEBUG: created relate Note: " + input.value + " and Resource ("+currentUrl+") ");
+        // dump("DEBUG: created relate Note: " + input.value + " and Resource ("+currentUrl+") ");
         lookmarker.statusLabel.value = lookmarker.statussavedNote;
       } else {
-        Components.utils.reportError("ERROR: associating Note-to-Resource aborted...");
+        dump("ERROR: associating Note-to-Resource aborted...");
         // lookmarker.statusLabel.value = lookmarker.statusnotsavedNote;
       }
     }
@@ -143,20 +149,23 @@ var lookmarker = {
   // Main Firefox Toolbar - Notice-Button Handler
   onToolbarButtonCommand: function(e) {
     lookmarker.updatePreferences(); // get current service Url of the PreferenceMananger..
-    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+      .getService(Components.interfaces.nsIPromptService);
     var title = getCurrentPageTitle();
     var currentUrl = getCurrentURL();
     var check = {value: false};                  // default the checkbox to false
     var input = {value: title};                  // default the edit field to Bob
-    var result = promptService.prompt(null, "Title of this Bookmark", "Give this web resource a proper title: ", input, null, check);
-    // result is true if OK is pressed, false if Cancel. input.value holds the value of the edit field if "OK" was pressed
+    var result = promptService.prompt(null, 
+      "Title of this Bookmark", "Give this web resource a proper title: ", input, null, check);
+    // result is true if OK is pressed, false if Cancel.
+    // input.value holds the value of the edit field if "OK" was pressed
     if (result) {
       // 
       createTopicResource(currentUrl, input.value);
-      // Components.utils.reportError("DEBUG: send Info-Note: " + input.value + " ("+currentUrl+") to " + lookmarker.serviceHorstPost);
+      // dump("DEBUG: send Info-Note: " + input.value + " ("+currentUrl+") to " + lookmarker.serviceHorstPost);
       lookmarker.statusLabel.value = lookmarker.statussavedNotice;
     } else {
-      Components.utils.reportError("INFO: sending Info-Note aborted by user...");
+      dump("INFO: sending Info-Note aborted by user...");
     }
     
   },
@@ -165,7 +174,8 @@ var lookmarker = {
   onOpenPreferenceDialog: function(e) {
     lookmarker.serviceHorstPost = lookmarker.prefManager.getCharPref("extensions.lookmarker.service.horstpost");
     var dialogSettings = { service: lookmarker.serviceHorstPost, notedown: lookmarker.noteAsHTML };
-    window.openDialog("chrome://lookmarker/content/options.xul", "deepamehta-extension-preferences", "chrome,titlebar,toolbar,centerscreen,modal", this, dialogSettings);
+    window.openDialog("chrome://lookmarker/content/options.xul", 
+      "deepamehta-extension-preferences", "chrome,titlebar,toolbar,centerscreen,modal", this, dialogSettings);
   },
   
   onLoadTopicMaps: function(e) {
@@ -181,7 +191,7 @@ var lookmarker = {
     lookmarker.updatePreferences(); // get current service Url of the PreferenceMananger..
     if (e != undefined) {
       var topicmapId = e.target.getAttribute("value");
-      // Components.utils.reportError("open map => " + topicmapId);
+      // dump("open map => " + topicmapId);
       var navToUrl = lookmarker.dmClient + "/topicmap/" + topicmapId;
       openUrlInNewTabAndMakeTabActive(navToUrl);
     }
@@ -223,7 +233,8 @@ var lookmarker = {
 function createTopicResource(url, title) {
   //
   var webpageTitle = cleanUpForJson(title);
-  var webtopic = '{"uri":"","type_uri":"dm4.webbrowser.web_resource","composite":{"dm4.webbrowser.web_resource_description":"'+webpageTitle+'","dm4.webbrowser.url":"'+url+'"}}';
+  var webtopic = '{"uri":"","type_uri":"dm4.webbrowser.web_resource","composite":'
+    + '{"dm4.webbrowser.web_resource_description":"'+webpageTitle+'","dm4.webbrowser.url":"'+url+'"}}';
   // checks if topic with given url already exists
   getTopicByValueAndType('dm4.webbrowser.url', url, function(responseText) {
     //
@@ -238,6 +249,7 @@ function createTopicResource(url, title) {
 
 function getResultingTopicId(resultData) {
   var topicId = JSON.parse(resultData).id;
+  // update gui elements in browser..
   lookmarker.populateTopicmaps();
   lookmarker.populateBookmarks();
 }
@@ -252,8 +264,10 @@ function createRelatedWebTopic(url, notetitle, body) {
   var givenTitle = cleanUpForJson(notetitle);
   var webpageTitle = cleanUpForJson(getCurrentPageTitle());
   // 
-  var notetopic = '{"uri":"","type_uri":"dm4.notes.note","composite":{"dm4.notes.title":"'+givenTitle+'","dm4.notes.text":"'+selectedText+'"}}';
-  var webtopic = '{"uri":"","type_uri":"dm4.webbrowser.web_resource","composite":{"dm4.webbrowser.web_resource_description":"'+webpageTitle+'","dm4.webbrowser.url":"'+url+'"}}';
+  var notetopic = '{"uri":"","type_uri":"dm4.notes.note","composite":{"dm4.notes.title":"'+givenTitle+'",'
+   + '"dm4.notes.text":"'+selectedText+'"}}';
+  var webtopic = '{"uri":"","type_uri":"dm4.webbrowser.web_resource","composite":'
+    + '{"dm4.webbrowser.web_resource_description":"'+webpageTitle+'","dm4.webbrowser.url":"'+url+'"}}';
   // 
   // mark down other topic to be able to create it after the result arrived for the first topic..
   topicOrigin = notetopic;
@@ -275,40 +289,49 @@ function createRelatedWebTopic(url, notetitle, body) {
 // --
 
 function sendAssocPost(body, _resultHandler) {
-    var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Components.interfaces.nsIXMLHttpRequest);
-    var url = lookmarker.serviceHorstPost + "/core/association";
-    req.open("POST", url);
-    req.setRequestHeader('Content-Type', 'application/json');
-    req.overrideMimeType("application/json;text/plain");
-    req.onreadystatechange = function (aEvt) {
-      if (req.readyState == 4) {
-        if (req.status != 200) {
-          Components.utils.reportError("AssocPOST failed: " + req.error + ":url:" + url);
-        } else {
-          if (_resultHandler != undefined) {
-            _resultHandler(req.responseText);
-          }
+  dump("DEBUG: POST ASSOC => service: " + lookmarker.serviceHorstPost + " noteAsHTML: " + lookmarker.noteAsHTML + "\n");
+  var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
+    .createInstance(Components.interfaces.nsIXMLHttpRequest);
+  var url = lookmarker.serviceHorstPost + "/core/association";
+  req.open("POST", url);
+  req.setRequestHeader('Content-Type', 'application/json');
+  req.overrideMimeType("application/json;text/plain");
+  req.onreadystatechange = function (aEvt) {
+    if (req.readyState == 4) {
+      if (req.status != 200) {
+        dump("ERROR: saving association failed: " + req.error + " URL:" + url + "\n");
+      } else {
+        if (_resultHandler != undefined) {
+          dump("INFO: saved association : " + body + " URL:" + url + "\n");
+          _resultHandler(req.responseText);
         }
       }
-    };
-    req.send(body);
+    }
+  };
+  req.send(body);
 }
 
 function sendTopicPost(body, _resultHandler) {
-    var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Components.interfaces.nsIXMLHttpRequest);
-    var url = lookmarker.serviceHorstPost + "/core/topic";
-    req.open("POST", url);
-    req.setRequestHeader('Content-Type', 'application/json');
-    req.overrideMimeType("application/json;text/plain");
-    req.onreadystatechange = function (aEvt) {
-      if (req.readyState == 4) {
-         if (req.status != 200)
-          Components.utils.reportError("TopicPOST failed: " + req.error + ":url:" + url);
-         else
-          if ( _resultHandler != undefined ) _resultHandler(req.responseText);
+  dump("DEBUG: POST TOPIC => service: " + lookmarker.serviceHorstPost + " noteAsHTML: " + lookmarker.noteAsHTML + "\n");
+  var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
+    .createInstance(Components.interfaces.nsIXMLHttpRequest);
+  var url = lookmarker.serviceHorstPost + "/core/topic";
+  req.open("POST", url);
+  req.setRequestHeader('Content-Type', 'application/json');
+  req.overrideMimeType("application/json;text/plain");
+  req.onreadystatechange = function (aEvt) {
+    if (req.readyState == 4) {
+      if (req.status != 200) {
+        dump("ERROR: saving topic failed: " + req.error + " URL:" + url + "\n");
+      } else {
+        if ( _resultHandler != undefined ) {
+          dump("INFO: saved topic : " + body + " URL:" + url + "\n");
+          _resultHandler(req.responseText);
+        }
       }
-    };
-    req.send(body);
+    }
+  };
+  req.send(body);
 }
 
 
@@ -335,22 +358,25 @@ function createRelatedTopicHandler(resultData) {
     // create the to be related topic
     sendTopicPost(topicOrigin, associateResultHandler);
   } else {
-    Components.utils.reportError("*** no topic " + topicToRelate.id + " could be related to.. skipping Note-creation");
+    dump("ERROR: no web resource " + topicToRelate.id + " found where the note could be related to .. skipping");
   }
 }
 
-/** make sure our topicOrigin was set before calling  **/
+/** note: you have to make sure our global topicOrigin var was set before calling  **/
 function associateResultHandler(resultData) {
   // get the formerly cached topicId of the related topic
   topicOrigin = JSON.parse(resultData);
   // 
   if ( topicToRelate.id != undefined && topicOrigin.id != undefined ) {
     // build association..
-    var association = '{"type_uri":"dm4.core.association","role_1":{"topic_id":'+topicOrigin.id+',"role_type_uri":"dm4.core.default"},"role_2":{"topic_id":'+topicToRelate.id+',"role_type_uri":"dm4.core.default"}}';
+    var association = '{"type_uri":"dm4.core.association","role_1":'
+      + '{"topic_id":' + topicOrigin.id + ',"role_type_uri":"dm4.core.default"},"role_2":{"topic_id":'
+      + topicToRelate.id + ',"role_type_uri":"dm4.core.default"}}';
     // create association
     sendAssocPost(association);
   } else {
-    Components.utils.reportError("*** could not associate \"" + topicOrigin.value + "\"(id:" + topicOrigin.id + ")  with \"" + topicToRelate.value + "\"(id:" + topicOrigin.id + ")");
+    dump("ERROR: could not associate \"" + topicOrigin.value + "\"(id:" + topicOrigin.id + ")  with \""
+      + topicToRelate.value + "\"(id:" + topicOrigin.id + ")");
   }
 }
 
@@ -361,19 +387,20 @@ function associateResultHandler(resultData) {
 // --
 
 function getTopicsByType(type_uri, callback) {
-    var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Components.interfaces.nsIXMLHttpRequest);
+    var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
+      .createInstance(Components.interfaces.nsIXMLHttpRequest);
     var url = lookmarker.serviceHorstPost+"/core/topic/by_type/"+encodeURIComponent(type_uri, "UTF-8");
     req.open("GET", url);
     req.setRequestHeader('Content-Type', 'application/json');
     req.overrideMimeType("application/json;text/plain");
-    // Components.utils.reportError("DEBUG: " + lookmarker.serviceHorstPost + "/core/topic/by_type/"+encodeURIComponent(type_uri, "UTF-8"));
+    // dump("DEBUG: " + lookmarker.serviceHorstPost + "/core/topic/by_type/"+encodeURIComponent(type_uri, "UTF-8"));
     req.onreadystatechange = function (aEvt) {
       if (req.readyState == 4) {
-         if(req.status != 200) {
+        if(req.status != 200) {
           lookmarker.statusLabel.value = lookmarker.statusloadError;
-         } else {
+        } else {
           callback(req.responseText);
-         }
+        }
       }
     };
     req.send(null);
@@ -383,13 +410,12 @@ function getTopicsByType(type_uri, callback) {
  ** otheriwse call given like: handler(undefined)..
  **/
 function getTopicByValueAndType(type_uri, value, callback) {
-    var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Components.interfaces.nsIXMLHttpRequest);
-    // Components.utils.reportError("DEBUG: url is " + value + " and " + encodeURIComponent(value, "UTF-8"));
+    var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
+      .createInstance(Components.interfaces.nsIXMLHttpRequest);
     var url = lookmarker.serviceHorstPost+"/core/topic/by_value/" + type_uri + "/" + encodeURIComponent(value, "UTF-8");
     req.open("GET", url);
     req.setRequestHeader('Content-Type', 'application/json');
     req.overrideMimeType("application/json;text/plain");
-    // Components.utils.reportError("DEBUG: " + lookmarker.serviceHorstPost + "/core/topic/"+type_uri+"/value/"+encodeURIComponent(value, "UTF-8"));
     req.onreadystatechange = function (aEvt) {
       if (req.readyState == 4) {
         if(req.status == 500) { // AMBIGUITY ERROR
@@ -406,12 +432,13 @@ function getTopicByValueAndType(type_uri, value, callback) {
 }
 
 function getTopic(id, callback) {
-    var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Components.interfaces.nsIXMLHttpRequest);
+    var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
+      .createInstance(Components.interfaces.nsIXMLHttpRequest);
     var url = lookmarker.serviceHorstPost+"/core/topic/" + id;
     req.open("GET", url);
     req.setRequestHeader('Content-Type', 'application/json');
     req.overrideMimeType("application/json;text/plain");
-    // Components.utils.reportError("DEBUG: " + lookmarker.serviceHorstPost + "/core/topic/"+id);
+    // dump("DEBUG: " + lookmarker.serviceHorstPost + "/core/topic/"+id);
     req.onreadystatechange = function (aEvt) {
       if (req.readyState == 4) {
         if(req.status != 200) {
@@ -433,7 +460,8 @@ function getTopic(id, callback) {
 /** getSelectedHTML incl. hyperlinks at level of depth 0 or 1 in the selected dom.. */
 function getCursorSelection() {
 
-    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator);
+    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+      .getService(Components.interfaces.nsIWindowMediator);
     var mainWindow = wm.getMostRecentWindow("navigator:browser");
     var tabBrowser = mainWindow.getBrowser();
     var selection = tabBrowser.contentWindow.getSelection();
@@ -451,7 +479,8 @@ function getCursorSelection() {
           noteBody += '<' + collection[i].nodeName.toLowerCase() + '';
           if (collection[i].attributes != null) {
             for ( var k = 0; k < collection[i].attributes.length; k++) {
-              var attribute = XPCNativeWrapper.unwrap(collection[i].attributes[k]); // thanks to the mozilla add-on forum
+              // thanks to the mozilla add-on forum
+              var attribute = XPCNativeWrapper.unwrap(collection[i].attributes[k]); 
               if ( attribute.name == "class" || attribute.name == "style" || 
                   attribute.value == "" || attribute.name == "id" ) {
                 // ignore these attributes
@@ -474,7 +503,8 @@ function getCursorSelection() {
               noteBody += '<' + childNode.nodeName.toLowerCase() + '';
               if (childNode != undefined && childNode.attributes != null) {
                 for ( var k = 0; k < childNode.attributes.length; k++) {
-                  var childAttribute = XPCNativeWrapper.unwrap(childNode.attributes[k]); // thanks to mozilla add-on forum
+                  // thanks to mozilla add-on forum
+                  var childAttribute = XPCNativeWrapper.unwrap(childNode.attributes[k]); 
                   if ( childAttribute.name == "class" || childAttribute.name == "style" 
                       || childAttribute.value == "" || attribute.name == "id" ) {
                     // ignore attribute in all these cases..
@@ -512,25 +542,28 @@ function autoCompleteHref(value, docFrag) {
   } else  { 
     // substitutng
     value = docFrag.baseURI.slice(0, -1) + value; // FIXME currently assuming all baseURIs end on a slash
-    // Components.utils.reportError("autocompleting relative URL to " + value);
+    // dump("autocompleting relative URL to " + value);
     return value;
   }
 }
 
 function getCurrentURL() {
-    var currentWindow = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
+    var currentWindow = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+      .getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
     var currBrowser = currentWindow.getBrowser();
     var currURL = currBrowser.currentURI.spec;
     return currURL;
 }
 
 function openUrlInNewTabAndMakeTabActive(url) {
-    var currentWindow = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
+    var currentWindow = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+      .getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
     currentWindow.gBrowser.selectedTab = currentWindow.gBrowser.addTab(url);
 }
 
 function getCurrentPageTitle() {
-    var currentWindow = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser"); 
+    var currentWindow = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+      .getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser"); 
     var currBrowser = currentWindow.getBrowser();
     var currTitle = currBrowser.contentTitle;
     return currTitle;
