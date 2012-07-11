@@ -17,6 +17,10 @@ Please understand the technical risks and visit the plugins page on <https://www
 
 Version History
 ---------------
+
+**1.0-RC3** -- Jul 10, 2012
+* updated meta-files according to MDN-documentation to support XPI-installation
+
 **1.0-RC2** -- Jul 10, 2012
 * compatibility upgrade (dm-4.0.11, ff-13.0.x)
 * minor code improvements (commenting, logging, indention)

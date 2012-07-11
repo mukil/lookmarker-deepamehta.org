@@ -1,19 +1,28 @@
 <?xml version="1.0"?>
-<RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
-         xmlns:NC="http://home.netscape.com/NC-rdf#"
-         xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <RDF:Description RDF:about="rdf:#$kz5hd"
-                   em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
-                   em:minVersion="3.6"
-                   em:maxVersion="13.0.*" />
-  <RDF:Description RDF:about="urn:mozilla:install-manifest"
-                   em:id="lookmarker@deepamehta.org"
-                   em:name="DeepaMehta 4 Notetaker"
-                   em:version="1.0"
-                   em:creator="Malte Reißig"
-                   em:description="Bookmarking and Notetaking. Introduce and navigate &quot;Web Resources&quot; to and form deepamehta and associate &quot;Notes&quot; to them easily."
-                   em:homepageURL="https://www.deepamehta.de/en/content/deepamehta-firefox-plugin"
-                   em:optionsURL="chrome://lookmarker/content/options.xul">
-    <em:targetApplication RDF:resource="rdf:#$kz5hd"/>
-  </RDF:Description>
-</RDF:RDF>
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+    <Description about="urn:mozilla:install-manifest">
+
+        <em:id>lookmarker@deepamehta.org</em:id>
+        <em:name>Lookmarker (Notetaking with DeepaMehta)</em:name>
+        <em:version>1.0-RC3</em:version>
+        <em:type>2</em:type>
+
+        <em:targetApplication>
+            <Description>
+                <em:id>lookmarker@deepamehta.org</em:id>
+                <em:minVersion>3.6</em:minVersion>
+                <em:maxVersion>13.0.*</em:maxVersion>
+            </Description>
+        </em:targetApplication>
+
+        <em:creator>Malte Reißig</em:creator>
+        <em:description>Lookmarker let users extract individual structured items from web pages as they browse, and store and annotate them in a shared repository for access by others.</em:description>
+        <em:homepageURL>https://www.deepamehta.de/en/content/deepamehta-firefox-plugin</em:homepageURL>
+        <em:optionsURL>chrome://lookmarker/content/options.xul</em:optionsURL>
+
+    </Description>
+
+</RDF>
