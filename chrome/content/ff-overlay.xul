@@ -17,7 +17,7 @@
       oncommand="lookmarker.onMenuItemCommand(event)"/>
   </popup>
 
-  <toolbarpalette id="BrowserToolbarPalette"> <!-- maybe unnecessary after using addon-bar -->
+  <toolbarpalette id="BrowserToolbarPalette"> <!-- adds our button to the firefox palette of all available buttons -->
     <toolbarbutton id="lookmarker-toolbar-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
       label="&lookmarkerToolbarButton.label;" tooltiptext="&lookmarkerToolbarButton.tooltip;"
       oncommand="lookmarker.onToolbarButtonCommand()"/>
@@ -47,9 +47,10 @@
   </hbox>
    -->
    
+
   <toolbox id="navigator-toolbox">
-    <toolbar class="chromeclass-toolbar" toolbarname="&lookmarkerToolbar.name;" customizable="false" id="lookmarker-toolbar" mode="full" autohide="true">
-      <!--<label value="View:"/>-->
+    <toolbar toolbarname="&lookmarkerToolbar.name;" customizable="true" id="lookmarker-toolbar" mode="full"
+      insertbefore="PersonalToolbar" defaultset="lookmarker-toolbar-button,topicmap-menubar,bookmark-menubar">
       <menubar id="topicmap-menubar" onclick="lookmarker.onLoadTopicMaps(event)">
         <menu id="topicmap-menubar-menu" label="Topic Maps" oncommand="lookmarker.onOpenTopicmap(event)">
           <menupopup id="topicmap-menubar-popup">

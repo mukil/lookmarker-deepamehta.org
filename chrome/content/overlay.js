@@ -20,19 +20,24 @@ var lookmarker = {
   onLoad: function() {
     // onLoad code
     dump("DEBUG: onLoad is called... ");
+    dump("DEBUG: checking for Initial run to place Bookmark/Notice-Button... ");
+    if (Application.extensions) {
+      firstRun(Application.extensions);
+    } else {
+      Application.getExtensions(firstRun)
+    }
+
     lookmarker.prefManager = Components.classes["@mozilla.org/preferences-service;1"].
       getService(Components.interfaces.nsIPrefBranch);
-    lookmarker.statusLabel = document.getElementById("deepaMehtaStatusLabel");
     lookmarker.updatePreferences();
     // new placement of our toolbarbutton and new statuslabel // credits to mike.kaply.com for "new add-on bar" blogpost
     var addonBar = document.getElementById("addon-bar");
     if (addonBar) {
-      if (!document.getElementById("lookmarker-toolbar-button")) {
-        // if not yet elsewhere present, place the button in the addon-bar and show it
-        var addonBarCloseButton = document.getElementById("addonbar-closebutton")
-        addonBar.insertItem("lookmarker-toolbar-button", addonBarCloseButton.nextSibling);
-        addonBar.collapsed = false;
-      }
+      lookmarker.statusLabel = document.getElementById("deepaMehtaStatusLabel");
+      // also place the button in the addon-bar
+      var addonBarCloseButton = document.getElementById("addonbar-closebutton")
+      addonBar.insertItem("lookmarker-toolbar-button", addonBarCloseButton.nextSibling);
+      addonBar.collapsed = false;
     }
     // 
     this.strings = document.getElementById("lookmarker-strings");
@@ -138,7 +143,7 @@ var lookmarker = {
         // createRelatedWebTopic(currentUrl, title, selectedText);
         createRelatedWebTopic(currentUrl, input.value, selectedText);
         // dump("DEBUG: created relate Note: " + input.value + " and Resource ("+currentUrl+") ");
-        lookmarker.statusLabel.value = lookmarker.statussavedNote;
+        if (lookmarker.statusLabel != undefined) lookmarker.statusLabel.value = lookmarker.statussavedNote;
       } else {
         dump("ERROR: associating Note-to-Resource aborted...");
         // lookmarker.statusLabel.value = lookmarker.statusnotsavedNote;
@@ -163,7 +168,7 @@ var lookmarker = {
       // 
       createTopicResource(currentUrl, input.value);
       // dump("DEBUG: send Info-Note: " + input.value + " ("+currentUrl+") to " + lookmarker.serviceHorstPost);
-      lookmarker.statusLabel.value = lookmarker.statussavedNotice;
+      if (lookmarker.statusLabel != undefined) lookmarker.statusLabel.value = lookmarker.statussavedNotice;
     } else {
       dump("INFO: sending Info-Note aborted by user...");
     }
@@ -240,7 +245,7 @@ function createTopicResource(url, title) {
     //
     if (responseText != undefined) {
       // ### Notify user and load existing Bookmark, may wants to change title/name of URL 
-      lookmarker.statusLabel.value = lookmarker.statusdoubledURL;
+      if (lookmarker.statusLabel != undefined) lookmarker.statusLabel.value = lookmarker.statusdoubledURL;
     } else { // undefined => no topic like this known.. go on create it.
       sendTopicPost(webtopic, getResultingTopicId);
     }
@@ -342,8 +347,8 @@ function sendTopicPost(body, _resultHandler) {
 
 function cleanUpForJson(text) {
   text = text.toString().replace(/\\/g, "\\\\");
-  text = text.toString().replace(/\r/g, "\\r");
-  text = text.toString().replace(/\n/g, "\\n");
+  text = text.toString().replace(/\r/g, "<br/>");
+  text = text.toString().replace(/\n/g, "<br/>");
   text = text.toString().replace(/"/g, "\\\"");
   text = text.toString().replace(/{/g, "\\\{");
   text = text.toString().replace(/}/g, "\\\}");
@@ -397,7 +402,7 @@ function getTopicsByType(type_uri, callback) {
     req.onreadystatechange = function (aEvt) {
       if (req.readyState == 4) {
         if(req.status != 200) {
-          lookmarker.statusLabel.value = lookmarker.statusloadError;
+          if (lookmarker.statusLabel != undefined) lookmarker.statusLabel.value = lookmarker.statusloadError;
         } else {
           callback(req.responseText);
         }
@@ -420,7 +425,7 @@ function getTopicByValueAndType(type_uri, value, callback) {
       if (req.readyState == 4) {
         if(req.status == 500) { // AMBIGUITY ERROR
           // internal server error... not saving URL again..
-          lookmarker.statusLabel.value = lookmarker.statusloadError;
+          if (lookmarker.statusLabel != undefined) lookmarker.statusLabel.value = lookmarker.statusloadError;
         } else if (req.status != 200) { // NOTHING FOUND
           callback(undefined); // save URL
         } else if (req.status == 200) { // OK
@@ -442,7 +447,7 @@ function getTopic(id, callback) {
     req.onreadystatechange = function (aEvt) {
       if (req.readyState == 4) {
         if(req.status != 200) {
-          lookmarker.statusLabel.value = lookmarker.statusloadError;
+          if (lookmarker.statusLabel != undefined) lookmarker.statusLabel.value = lookmarker.statusloadError;
         } else {
           callback(req.responseText);
         }
@@ -454,12 +459,25 @@ function getTopic(id, callback) {
 
 
 // --
-// --- little xul handlers
+// --- little xul helpers
 // --
 
-/** getSelectedHTML incl. hyperlinks at level of depth 0 or 1 in the selected dom.. */
-function getCursorSelection() {
+function firstRun(extensions) {
+  var extension = extensions.get("lookmarker@deepamehta.org");
+  if (extension.firstRun) {
+    dump("DEBUG.Indeed: Notetaker is running for the first time adding Bookmark/Notice-Button to nav-bar..");
+    if (!document.getElementById("lookmarker-toolbar-button")) {
+      var navBar = document.getElementById("nav-bar");
+      navBar.insertItem("lookmarker-toolbar-button", navBar);
+      navBar.setAttribute("currentset", navBar.currentSet);
+      // document.persist(navBar.id, "currentset");
+    }
+  }
+}
 
+function getCursorSelection() {
+// uses getSelectedHTML incl. hyperlinks at level of depth 0 or 1 in the selected dom
+// fixme: getSelectedHTML() is currently set out of order
     var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
       .getService(Components.interfaces.nsIWindowMediator);
     var mainWindow = wm.getMostRecentWindow("navigator:browser");
@@ -469,69 +487,79 @@ function getCursorSelection() {
     if ( lookmarker.noteAsHTML ) {
       var range = selection.getRangeAt(0);
       var docFrag = range.cloneContents();
-      var noteBody = "";
-      // 
-      var collection = docFrag.childNodes;
-      for( var i = 0; i < collection.length; i++ ) {
-        // FIXME: recursive parser for our DocumentFragment 
-        // level0 child
-        if ( collection[i].nodeName != "#text" ) {
-          noteBody += '<' + collection[i].nodeName.toLowerCase() + '';
-          if (collection[i].attributes != null) {
-            for ( var k = 0; k < collection[i].attributes.length; k++) {
-              // thanks to the mozilla add-on forum
-              var attribute = XPCNativeWrapper.unwrap(collection[i].attributes[k]); 
-              if ( attribute.name == "class" || attribute.name == "style" || 
-                  attribute.value == "" || attribute.name == "id" ) {
-                // ignore these attributes
-              } else {
-                if (attribute.name == "href") {
-                  attribute.value = autoCompleteHref(attribute.value, docFrag);
-                }
-                noteBody += ' ' +attribute.name + '="' + attribute.value + '"';
-              }
-            }
-          }
-          noteBody += '>';
-          // evtl. level 1
-          var openEnd = false;
-          var childName = "a";
-          if (collection[i].childNodes.length >=0) {
-            // handle the case if <a>-node- link is directly nested in a let's say <h2>-node..
-            var childNode = collection[i].childNodes[0];
-            if (childNode.nodeName == "A") {
-              noteBody += '<' + childNode.nodeName.toLowerCase() + '';
-              if (childNode != undefined && childNode.attributes != null) {
-                for ( var k = 0; k < childNode.attributes.length; k++) {
-                  // thanks to mozilla add-on forum
-                  var childAttribute = XPCNativeWrapper.unwrap(childNode.attributes[k]); 
-                  if ( childAttribute.name == "class" || childAttribute.name == "style" 
-                      || childAttribute.value == "" || attribute.name == "id" ) {
-                    // ignore attribute in all these cases..
-                  } else {
-                    if (childAttribute.name == "href") {
-                      childAttribute.value = autoCompleteHref(childAttribute.value, docFrag);
-                    }
-                    noteBody += ' ' + childAttribute.name + '="' + childAttribute.value + '"';
-                  }
-                }
-                noteBody += '>';
-                openEnd = true;
-              }
-            }
-          }
-          noteBody += collection[i].textContent;
-          if (openEnd) noteBody += '</' + childName + '>';
-          noteBody += '</' + collection[i].nodeName.toLowerCase() + '>';
-        } else {
-          // just simple text selected..
-          noteBody += collection[i].textContent;
-        }
-      }
-      return noteBody;
+      var noteBody = getSelectedHTML(docFrag.childNodes);
+      if (noteBody != undefined) return noteBody;
+      return selection;
     } else {
       return selection;
     }
+}
+
+function getSelectedHTML(collection) {
+  var content = "";
+
+  for( var i = 0; i < collection.length; i++ ) {
+    if (collection.length > 2) return undefined; // skip saving selection as HTMLElements
+    // FIXME: recursive parser for our DocumentFragment 
+    // level0 child
+    if ( collection[i].nodeName != "#text" ) {
+      content += '<' + collection[i].nodeName.toLowerCase() + '';
+      if (collection[i].attributes != null) {
+        for ( var k = 0; k < collection[i].attributes.length; k++) {
+          // thanks to the mozilla add-on forum
+          var attribute = XPCNativeWrapper.unwrap(collection[i].attributes[k]); 
+          if ( attribute.name == "class" || attribute.name == "style" || 
+              attribute.value == "" || attribute.name == "id" ) {
+            // ignore these attributes
+          } else {
+            if (attribute.name == "href") {
+              attribute.value = autoCompleteHref(attribute.value, docFrag);
+            }
+            content += ' ' +attribute.name + '="' + attribute.value + '"';
+          }
+        }
+      }
+      content += '>';
+      // evtl. level 1
+      var openEnd = false;
+      var childName = "a";
+      if (collection[i].childNodes.length >=0) {
+        // handle the case if <a>-node- link is directly nested in a let's say <h2>-node..
+        var childNode = collection[i].childNodes[0];
+        if (childNode.nodeName == "A") {
+          content += '<' + childNode.nodeName.toLowerCase() + '';
+          // dump("  DEBUG.getSelectedHTML: \"" + content + "\"");
+          if (childNode != undefined && childNode.attributes != null) {
+            for ( var k = 0; k < childNode.attributes.length; k++) {
+              // thanks to mozilla add-on forum
+              var childAttribute = XPCNativeWrapper.unwrap(childNode.attributes[k]); 
+              if ( childAttribute.name == "class" || childAttribute.name == "style" 
+                  || childAttribute.value == "" || attribute.name == "id" ) {
+                // ignore attribute in all these cases..
+              } else {
+                if (childAttribute.name == "href") {
+                  childAttribute.value = autoCompleteHref(childAttribute.value, docFrag);
+                }
+                content += ' ' + childAttribute.name + '="' + childAttribute.value + '"';
+              }
+            }
+            content += '>';
+            openEnd = true;
+          }
+        }
+      }
+      // in any case add textcontent in between just parsed elements
+      content += collection[i].textContent;
+      if (openEnd) content += '</' + childName + '>';
+      content += '</' + collection[i].nodeName.toLowerCase() + '>';
+      // dump("DEBUG.getSelectedHTML: \"" + content + "\"");
+    } else {
+      // just simple text selected..
+      content += collection[i].textContent;
+    }
+  }
+  dump("DEBUG.content: \"" + content + "\"");
+  return content;
 }
 
 function autoCompleteHref(value, docFrag) {
