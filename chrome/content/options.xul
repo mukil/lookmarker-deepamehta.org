@@ -8,17 +8,24 @@
 
     <prefpane id="services-tab" label="Services" image="chrome://lookmarker/skin/eyeconClear.png">
       <preferences>
-        <preference id="extensions-lookmarker-service-horstpost" name="extensions.lookmarker.service.horstpost" type="string"/>
+        <preference id="extensions-lookmarker-service-horstpost" name="extensions.lookmarker.service.horstpost"
+          type="string"/>
         <preference id="extensions-lookmarker-notedown-html" name="extensions.lookmarker.notedown.html" type="bool"/>
       </preferences>
 
       <vbox id="optionsBox">
-        <caption label="DeepaMehta Service Definition"/>
-        <label control="service-host" value="Your DeepaMehta Service URL"/>
+        <caption label="DeepaMehta Host"/>
+        <label control="service-host" value="DeepaMehta Host"/>
         <textbox id="service-host-box" preference="extensions-lookmarker-service-horstpost"/>
         <caption label=""/>
-        <caption label="DeepaMehta Note Settings"/>
-        <checkbox id="notedown-html" preference="extensions-lookmarker-notedown-html" label="Mark down text selections in HTML"/>
+        <caption label="DeepaMehta Notetaking Preference"/>
+        <description>
+          Shall DeepaMehta 4 Notetaker try to preserve the HTML-Markup of individual strucutred items on
+           webpages when saving them?
+        </description>
+        <checkbox id="notedown-html" preference="extensions-lookmarker-notedown-html"
+          label="Yes, try to store notices along with their hypertext markup."/>
+        <caption label=""/>
       </vbox>
     </prefpane>
     <!-- <prefpane id="types-tab" label="Types" src="chrome://lookmarker/content/types.xul"/> -->

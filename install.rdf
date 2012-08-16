@@ -5,9 +5,9 @@
 
     <Description about="urn:mozilla:install-manifest">
 
-        <em:id>lookmarker@deepamehta.org</em:id>
-        <em:name>Lookmarker (Notetaking with DeepaMehta)</em:name>
-        <em:version>1.0-RC3</em:version>
+        <em:id>notetaker@deepamehta.org</em:id>
+        <em:name>DeepaMehta 4 Notetaker</em:name>
+        <em:version>1.0-RC5</em:version>
         <em:type>2</em:type>
 
         <em:targetApplication>
@@ -18,8 +18,8 @@
             </Description>
         </em:targetApplication>
 
-        <em:creator>Malte Reißig</em:creator>
-        <em:description>Lookmarker let users extract individual structured items from web pages as they browse, and store and annotate them in a shared repository for access by others.</em:description>
+        <em:creator>DeepaMehta e.V.</em:creator>
+        <em:description>Helps users extract individual structured items from web pages as they browse, and store and annotate them in a shared repository for access by others.</em:description>
         <em:homepageURL>https://www.deepamehta.de/en/content/deepamehta-firefox-plugin</em:homepageURL>
         <em:optionsURL>chrome://lookmarker/content/options.xul</em:optionsURL>
 

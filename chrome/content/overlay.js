@@ -463,7 +463,7 @@ function getTopic(id, callback) {
 // --
 
 function firstRun(extensions) {
-  var extension = extensions.get("lookmarker@deepamehta.org");
+  var extension = extensions.get("notetaker@deepamehta.org");
   if (extension.firstRun) {
     dump("DEBUG.Indeed: Notetaker is running for the first time adding Bookmark/Notice-Button to nav-bar..");
     if (!document.getElementById("lookmarker-toolbar-button")) {
