@@ -1,6 +1,6 @@
 // lookmarker preferences and their defaults
 pref("extensions.lookmarker.service.horstpost", "http://localhost:8080");
-pref("extensions.lookmarker.notedown.html", true);
+pref("extensions.lookmarker.notedown.html", false);
 
 /* debugging prefs, deactivated for releases..
 pref("browser.dom.window.dump.enabled", true);

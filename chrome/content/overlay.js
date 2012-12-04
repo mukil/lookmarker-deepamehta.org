@@ -280,6 +280,7 @@ function createRelatedWebTopic(url, notetitle, body) {
   getTopicByValueAndType('dm4.webbrowser.url', url, function(responseText) {
     if (responseText != undefined) {
       // just saving the "Notice" and associating it to the just loaded URL.
+      // load the corresponding web resource first
       createRelatedTopicHandler(responseText);
     } else {
       sendTopicPost(webtopic, createRelatedTopicHandler);
@@ -357,13 +358,27 @@ function cleanUpForJson(text) {
 
 /** create the note topic after the talked about resource topic.. */
 function createRelatedTopicHandler(resultData) {
-  topicToRelate = JSON.parse(resultData); // mark down the resource topic (now with ID) for later usage..
-  // 
-  if (topicOrigin != undefined) {
-    // create the to be related topic
-    sendTopicPost(topicOrigin, associateResultHandler);
+  topicToRelate = JSON.parse(resultData); // mark down the dm4.webbrowser.url topic (now with ID) for later usage..
+  if (topicToRelate.type_uri == "dm4.webbrowser.url") {
+    // we want relate to the web resource, not the webbrowser.url
+    getRelatedWebResource(resultData, function(web_resource) {
+      // 
+      topicToRelate = JSON.parse(web_resource).items[0]
+      if (topicOrigin != undefined) {
+        // create the to be related topic
+        sendTopicPost(topicOrigin, associateResultHandler);
+      } else {
+        alert("ERROR: no dm4.webbrowser.url " + topicToRelate.id + " found where the note could be related to .. skipping");
+      }
+    });
   } else {
-    dump("ERROR: no web resource " + topicToRelate.id + " found where the note could be related to .. skipping");
+    // topicToRelate to is already a web resource (initial bookmark of web resource with url x)
+    if (topicOrigin != undefined) {
+        // create the to be related topic
+        sendTopicPost(topicOrigin, associateResultHandler);
+    } else {
+        alert("ERROR: no dm4.webbrowser.url " + topicToRelate.id + " found where the note could be related to .. skipping");
+    }
   }
 }
 
@@ -403,6 +418,28 @@ function getTopicsByType(type_uri, callback) {
       if (req.readyState == 4) {
         if(req.status != 200) {
           if (lookmarker.statusLabel != undefined) lookmarker.statusLabel.value = lookmarker.statusloadError;
+        } else {
+          callback(req.responseText);
+        }
+      }
+    };
+    req.send(null);
+}
+
+function getRelatedWebResource(topic, callback) {
+    var topic_id = JSON.parse(topic).id;
+    var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
+      .createInstance(Components.interfaces.nsIXMLHttpRequest);
+    var relatedUrl = lookmarker.serviceHorstPost+"/core/topic/"+ topic_id
+      + "/related_topics?others_topic_type_uri=dm4.webbrowser.web_resource";
+    req.open("GET", relatedUrl);
+    req.setRequestHeader('Content-Type', 'application/json');
+    req.overrideMimeType("application/json;text/plain");
+    // dump("DEBUG: " + lookmarker.serviceHorstPost + "/core/topic/by_type/"+encodeURIComponent(type_uri, "UTF-8"));
+    req.onreadystatechange = function (aEvt) {
+      if (req.readyState == 4) {
+        if(req.status != 200) {
+          if (lookmarker.statusLabel != undefined) lookmarker.statusLabel.value = "Could not load related Web Resource from: " + relatedUrl;
         } else {
           callback(req.responseText);
         }
@@ -513,6 +550,7 @@ function getSelectedHTML(collection) {
             // ignore these attributes
           } else {
             if (attribute.name == "href") {
+              if (docFrag == undefined) getCursorSelection(); // fallback
               attribute.value = autoCompleteHref(attribute.value, docFrag);
             }
             content += ' ' +attribute.name + '="' + attribute.value + '"';
@@ -538,6 +576,7 @@ function getSelectedHTML(collection) {
                 // ignore attribute in all these cases..
               } else {
                 if (childAttribute.name == "href") {
+                  if (docFrag == undefined) getCursorSelection(); // fallback
                   childAttribute.value = autoCompleteHref(childAttribute.value, docFrag);
                 }
                 content += ' ' + childAttribute.name + '="' + childAttribute.value + '"';

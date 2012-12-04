@@ -20,7 +20,7 @@
         <caption label=""/>
         <caption label="DeepaMehta Notetaking Preference"/>
         <description>
-          Shall DeepaMehta 4 Notetaker try to preserve the HTML-Markup of individual strucutred items on
+          Shall DeepaMehta 4 Notetaker try to preserve the HTML-Markup of individual structured items on
            webpages when saving them?
         </description>
         <checkbox id="notedown-html" preference="extensions-lookmarker-notedown-html"

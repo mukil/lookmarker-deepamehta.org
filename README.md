@@ -2,7 +2,7 @@
 DeepaMehta Firefox Extension
 ============================
 
-Lookmarker (a web browser plugin) let users extract individual structured items from web pages as they browse, and store and annotate them in a shared repository for access by others.
+The DeepaMehta 4 Notetaker (a web browser plugin) let users extract individual structured items from web pages as they browse, and store and annotate them in a shared repository for access by others.
 
 DeepaMehta4 is a software platform designed as a think tool.
 <http://github.com/jri/deepamehta>
@@ -17,6 +17,13 @@ Please understand the technical risks and visit the plugins page on <https://www
 
 Version History
 ---------------
+
+**1.0** -- Dec 3, 2012
+* fixed "relating to 'dm4.webbrowser.web_resource' instead of 'dm4.webbrowser.url' issue
+* updated compatibility of add-on to firefox 17
+* turned of experimental HTML-notetaking `off` by default
+
+Note: on an ubuntu 12.04 (or later) with unity as a window manager the [Global Menu Bar integration](https://launchpad.net/globalmenu-extension) by Chris Coulson must be disabled to make the 'DeepaMehta Toolbar' work as expected.
 
 **1.0-RC3** -- Jul 10, 2012
 * updated meta-files according to MDN-documentation to support XPI-installation
@@ -53,6 +60,4 @@ Version History
 * compatible with DeepaMehta 3 v0.4.2
 * basic functionality
 
-------------
-Author: Malte Reißig malte aed deepamehta.org  
-Last Modified: July 10, 2012
+Copyright 2012, Malte Reißig <malte aed deepamehta.org>
